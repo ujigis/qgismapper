@@ -84,7 +84,7 @@ The connection to a gps device might be not stable (esp. if using e.g. bluetooth
 Audio plugin enables user to record audio using standard sound card input. The default system audio source is used - it's not possible to choose specific source inside plugin (do this using your system settings instead, please).
 
 http://qgismapper.googlecode.com/svn/trunk/doc/gatherplugin/gather_src_audio.png
-  
+
 The only thing that the plugin allows to set is whether or not audio recording will be on during data recording. This is chosen by the _Recording enabled/disabled_ button. It's only possible to change the settings outside data recording session. Note that after enabling of audio recording (regardless if data recording is on or off), a audio peak meter starts showing audio peak values. The purpose of this meter is to show some indication to the user, whether any audio is being detected/captured (by speaking to the microphone, the meter should show some activity).
 
 == Video ==
@@ -120,7 +120,7 @@ Hint 3: As you might see by now, it's pretty tricky to get a few cameras running
 The last thing that can be set is codec used to encode the video data:
 
 http://qgismapper.googlecode.com/svn/trunk/doc/gatherplugin/gather_src_video_enc.png
- 
+
 Video plugin uses ffmpeg libraries to encode video - available codecs are thus equivalent to the ones ffmpeg is compiled with. In case of ubuntu and debian, the standard ubuntu 9.04 ffmpeg doesn't support enhanced codecs (because of patent issues) like mpeg4 and x264 - one is required to use e.g. mjpeg codec, which should always be available. For each codec it is possible to choose bitrate - use of this parameter is however codec-dependent. Please note that the more sophisticated codec you chooose, the more powerful cpu you need to be able to compress the data real time. In case the cpu is too slow, uncompressed data are stored in ram until compressed - and you might get into ugly memory-full problems. Please test that you are able to compress video in real time (and you have some cpu-power reserves) before you start using video recording in terrain.
 
 All available codecs can be listed by using the `ffmpeg -formats |grep DEV` command. Not all of these codecs are usable (e.g. bmp would output a bunch of bmp images, which is not supported  by gatherer) - if you are unsure whether particular codec is 'good', try setting it and you'll see, whether it works.
@@ -132,7 +132,7 @@ Recommended codecs, if installed, are mpeg4, x264, mpeg2 and mjpeg (in specified
 Notes plugin enables user to store notes during the recording - useful if e.g. microphone doesn't work, or if the notes are processed automatically later. Notes plugin functionality is only available after recording starts (for the obvious reasons).
 
 http://qgismapper.googlecode.com/svn/trunk/doc/gatherplugin/gather_src_notes.png
- 
+
 Once the recording started, the _Mark current position_ button is enabled. After clicking it, the current position on the map is marked (a red cross is shown on the map - see the example picture below). Also, an edit widget is shown under the button, where it's possible to add a note to the mark. After the note is entered, it's required to press _Add note_ button. After adding the note, the mark on map changes color to blue (to indicate that it contains a note). After pressing the _No note_ button, or the _Mark current position_ button again, the last entered mark is considered 'note-less' and is colored to green.
 
 http://qgismapper.googlecode.com/svn/trunk/doc/gatherplugin/gather_src_notes_marks.png
