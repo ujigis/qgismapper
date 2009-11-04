@@ -1,0 +1,59 @@
+#summary Documentation for gather plugin
+
+= Introduction =
+
+Gather plugin is a plugin for QuantumGIS software, that enables users to record travel path and other accompanying informations - audio and video, for example. The primary purpose of the software (combined with player counterpart of the plugin duo) is to enable easy mapping of cities by using a vehicle, touchscreen, microphone and cameras.
+
+After the data are recorded, it's possible to replay them later using player plugin (and thus use in some way, e.g. to create maps or note road types).
+
+
+= General data recording workflow =
+
+The following usage is assumed: User starts the qgis, configures output directory and data inputs (video cameras, audio devices...). After that, he starts recording data and 'traveling'. Data are continuously recorded and user is also enabled to leave short notes for the current position. Most of the data sources are visualized during recording (see sections below), so the user knows whether hardware is working as it should. When all planed places are driven-thru, the recording is stopped. All data stored between start and stop of recording are called a _recording_.
+
+= Installation =
+
+*TODO*
+
+= Basic user interface =
+
+The first time gather plugin is started, something like the following should show up:
+
+TODO: img
+
+
+The "Data gather plugin" dock widget contains complete user interface of the plugin. It consists of several parts:
+  * _Start recording_ button. By pressing this button the recording is started, using the current settings of output directory and source plugins. 
+  * _Output groupbox_. Here it's possible to specify directory, where recordings are stored. It also contains free space information, that contains current free space in the specified output directory (well, disk where the directory resides, to be precise). 
+  * _Path preview groupbox_ . Here it's possible to configure visualization of path traveled (received from gps data source). 
+  * If _Follow own gps position on map_ is checked, the map canvas extent will always be moved so that current gps position is centered in it. 
+  * _Map canvas scale_ slider allows to choose scale of the displayed map. 
+  * _Keep recorder paths..._ checkbox, if checked, ensures, that after recording ends, the recorded path will stay on the map canvas. When unchecked, all previous paths are erased from the map. 
+  * _Source plugins_ configuration tab box. Configuration options are described in the data source section, for each source separately. 
+  * _Configure GPS data source_ button. By pressing this button, a configuration dialog appears, where it's possible to set up the GPS data source. 
+  * _Switch to simple interface_ button. Using this button it's possible to switch the dockwidget to  a smaller one - which is more of just an informative widget (it's not possible to set up much of the recording there). See simple interface subsection.
+
+== Simple interface ==
+
+TODO
+
+
+= Data sources =
+
+== Gps ==
+
+Unlike other devices, the Gps device is configured using the "Configure GPS data source" button. The following dialog appears:
+
+TODO: img
+
+In the _GPS data source_ it is possible to choose one of the available GPS sources. Gather plugin currently supports the following sources: 
+  * _GPS serial device_ - support for serial devices providing NMEA data. When using this source, it's required to enter path to the serial device (could be e.g. /dev/rfcomm0 for linux and a bluetooth gps device). It's also required to specify baud rate of the serial connection (e.g. 3600, 38400). Note that a standard 8-N-1 'protocol' is used to communicate with the device at the specified baudrate. 
+  * _File_ - this option may be used to simulate a gps device and is mostly used to test the software. Parameters are (probably) previously recorded NMEA data file and number of characters read per second from the file. 
+  * _GPSd_ - to use data from GPSd daemon, it's required to enter it's address and port where it's listening. It's of course required to have the gpsd daemon running and configured to use it as a data source... 
+
+The connection to a gps device might be not stable (esp. if using e.g. bluetooth and there is some EM noise). Gather plugin therefore enables to specify, how often it should try to reconnect to a gps device (in case of lost connection) - and after how many failed attempts it should notify user about an error. Note that the notification is quite tough - the recording is stopped after lost gps connection and user is informed why. This is, because without valid GPS data it's pretty meaningless to continue mapping...
+
+
+== More data sources ==
+
+TODO!
