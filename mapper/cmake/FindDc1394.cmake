@@ -1,0 +1,16 @@
+# CMake module to search for dc1394 library
+#
+# If it's found it sets DC1394_FOUND to TRUE
+# and following variables are set:
+#    DC1394_INCLUDE_DIR
+#    DC1394_LIBRARY
+
+FIND_PATH (DC1394_INCLUDE_DIR dc1394/dc1394.h
+  # TODO paths?
+)
+
+FIND_LIBRARY(DC1394_LIBRARY NAMES dc1394)
+
+IF (DC1394_INCLUDE_DIR AND DC1394_LIBRARY)
+  SET (DC1394_FOUND)
+ENDIF (DC1394_INCLUDE_DIR AND DC1394_LIBRARY)
