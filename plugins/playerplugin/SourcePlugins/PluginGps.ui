@@ -1,0 +1,46 @@
+<ui version="4.0" >
+ <class>PluginGps</class>
+ <widget class="QWidget" name="PluginGps" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>297</width>
+    <height>241</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" >
+   <item>
+    <widget class="QTableWidget" name="info_tableWidget" >
+     <property name="enabled" >
+      <bool>true</bool>
+     </property>
+     <property name="editTriggers" >
+      <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+     <property name="cornerButtonEnabled" >
+      <bool>false</bool>
+     </property>
+     <property name="columnCount" >
+      <number>2</number>
+     </property>
+     <column>
+      <property name="text" >
+       <string>Item</string>
+      </property>
+     </column>
+     <column>
+      <property name="text" >
+       <string>Value</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
