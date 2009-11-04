@@ -1,0 +1,26 @@
+
+SET (AUDIO_SRCS PluginAudioWorker.cpp)
+
+INCLUDE_DIRECTORIES( ${PORTAUDIO_INCLUDE_DIRS} ${VORBIS_INCLUDE_DIR} )
+
+ADD_LIBRARY(PluginAudioWorker STATIC ${AUDIO_SRCS})
+
+TARGET_LINK_LIBRARIES(PluginAudioWorker ${PORTAUDIO_LIBRARIES} ${VORBIS_LIBRARIES})
+
+#####
+# PYTHON
+
+INCLUDE_DIRECTORIES(
+    ${PYTHON_INCLUDE_PATH}
+    ${SIP_INCLUDE_DIR}
+    ${QT_INCLUDE_DIR}
+    ${QT_QT_INCLUDE_DIR}
+    ${QT_QTCORE_INCLUDE_DIR}
+
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+FILE(GLOB audio_capture_files_sip sip/*.sip)
+set(SIP_EXTRA_FILES_DEPEND ${audio_capture_files_sip})
+ADD_SIP_PYTHON_MODULE(qgismapper.PluginAudioWorker sip/PluginAudioWorker.sip PluginAudioWorker ${PORTAUDIO_LIBRARIES} ${VORBIS_LIBRARIES})
+
