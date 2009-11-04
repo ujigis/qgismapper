@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Tasks SYSTEM "Tasks-4.1.dtd">
+<!-- eric4 tasks file for project playerplugin -->
+<Tasks version="4.1">
+  <Task priority="1" completed="False" bugfix="False">
+    <Summary>TODO: select the new recording</Summary>
+    <Description></Description>
+    <Created>2009-02-07, 00:12:54</Created>
+    <Resource>
+      <Filename>
+        <Name>DockWidget.py</Name>
+      </Filename>
+      <Linenumber>195</Linenumber>
+    </Resource>
+  </Task>
+  <Task priority="1" completed="False" bugfix="False">
+    <Summary>TODO: merge the following with Gatherer.py</Summary>
+    <Description></Description>
+    <Created>2009-02-07, 00:19:22</Created>
+    <Resource>
+      <Filename>
+        <Name>playerplugin.py</Name>
+      </Filename>
+      <Linenumber>24</Linenumber>
+    </Resource>
+  </Task>
+  <Task priority="1" completed="False" bugfix="True">
+    <Summary>FIXME: pretty fucked up, that we could get here twice (ass addVectorLayer calls QApp::processEvents())</Summary>
+    <Description></Description>
+    <Created>2009-02-07, 00:19:22</Created>
+    <Resource>
+      <Filename>
+        <Name>playerplugin.py</Name>
+      </Filename>
+      <Linenumber>239</Linenumber>
+    </Resource>
+  </Task>
+  <Task priority="1" completed="False" bugfix="True">
+    <Summary>FIXME: we need to convert pt frm layer to map coordinates here</Summary>
+    <Description></Description>
+    <Created>2009-02-19, 16:23:09</Created>
+    <Resource>
+      <Filename>
+        <Dir>SourcePlugins</Dir>
+        <Name>PluginPhoto.py</Name>
+      </Filename>
+      <Linenumber>82</Linenumber>
+    </Resource>
+  </Task>
+  <Task priority="1" completed="False" bugfix="False">
+    <Summary>TODO: remove overlapping canvas items, that are already present on map?</Summary>
+    <Description></Description>
+    <Created>2009-02-19, 16:23:09</Created>
+    <Resource>
+      <Filename>
+        <Dir>SourcePlugins</Dir>
+        <Name>PluginPhoto.py</Name>
+      </Filename>
+      <Linenumber>178</Linenumber>
+    </Resource>
+  </Task>
+  <Task priority="1" completed="False" bugfix="False">
+    <Summary>TODO: optimize using QPixmapCache</Summary>
+    <Description></Description>
+    <Created>2009-02-19, 16:23:09</Created>
+    <Resource>
+      <Filename>
+        <Dir>SourcePlugins</Dir>
+        <Name>PluginPhoto.py</Name>
+      </Filename>
+      <Linenumber>365</Linenumber>
+    </Resource>
+  </Task>
+</Tasks>

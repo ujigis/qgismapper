@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/plugins/gatherplugin" >
+    <file>ui_mapTool.xpm</file>
+    <file>icon.xpm</file>
+  </qresource>
+</RCC>
