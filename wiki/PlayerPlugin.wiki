@@ -1,0 +1,50 @@
+#summary Documentation for Player Plugin
+
+= Player plugin = 
+
+Player plugin is a plugin for Quantum GIS software that enables users to replay recorded paths with more data data sources, e.g. audio and video. With GatherPlugin it creates a complete recording and playback solution.
+
+
+== General data replay work flow ==
+
+Once data are recorded by the gather plugin, they are transferred into computer used to convert the stored data to whatever format required. By opening selected recording (see GatherPlugin for clarification, what a recording is), the user not only gets view of path travelled during recording (which may be later processed in QGIS), but also he may replay audio and video tracks and more operations. These tracks currently mainly serve the purpose of tagging roads. For example, if the recording operator saw a one-way street, he could mention it in the audio track. Or this fact could be seen in the video stream. It's possible to extend the functionality in the future, e.g. export video to a group of bitmaps, cut recorded audio and create a sight-seeing instructor by using recorded data.
+
+
+== Installation ==
+
+*TODO*
+
+
+== Basic user interface ==
+
+The first time player plugin is started, something like the following should show up:
+
+http://qgismapper.googlecode.com/svn/trunk/doc/playerplugin/player_gui.png
+
+
+The "Data player plugin" dockwidget contains complete user interface of the plugin. It consists of several parts:
+
+  * _Data source_ groupbox. The first edit line box contains path to directory containing recordings from gather plugin. After the path is entered (either by writing the path by hand or by pressing the " ... " button and browsing for the directory), press the _Load_ button to load the recordings list.
+  * After the list of recordings is loaded, it's possible to select one of them in the list below. The selected recording is loaded and it's possible to use the rest of dialog afterwards. Also it's possible to delete the currently selected recording from disk by using _Delete_ button. The _Import..._ button enables user to import an arbitrary NMEA log file and create a regular recording from it (only containing the converted gps track, obviously).
+  * _Replay_ groupbox. This part of dialog is used to control replay of the data. The main part of it is the replay position slider. Using this slider it's possible to rewind the recording to any recorded time. The current time and total time of recording is shown under the slider, to the right of _Play_ button 
+    * The Play button starts automatic replay of data at speed specified by the _Speed_ spinbox. At 100% the data is replayed at the speed at which it was recorded. Note that not all combinations of plugins enable replay at other than nominal speed (this is e.g. currently the case of audio plugin - if audio data is to be replayed, only 100% speed is available). The replay can be stopped by pressing the Stop button (it's the same button, that previously was "Play"). 
+    * _Keep recorded GPS position in extent_ - this checkbox, if checked, will ensure that current GPS position in the recording will always be visible on the map canvas (i.e. the map extent will be moved, when needed, so that current GPS position is always within the extent). 
+    * _Map tool_ - this button, if checked, will set plugin's special map tool to be used instead of active QGIS map tool. This map tool enables source plugins to perform certain special actions by clicking their canvas items (like showing photos after clicking their map canvas icon). The standard functionality of player plugin map tool is regular map panning - when dragging map, it gets scrolled accordingly. If you however click on/near the GPS track, a second mode is used - after releasing the mouse button, the current position in recording is rewinded to the time associated with the point at the track (i.e. the recording is rewinded so that the gps position at current recording time is the about the same as the mouse position in map).
+    * _Source plugins_ replay tab box. Replay options are described in the data source section for each source separately. 
+    * _Settings_ button. By pressing this button, a configuration dialog appears, containing additional configuration options of the player plugin (it's currently empty). 
+
+Basically the steps are:
+  # choose recordings directory
+  # press "Load" button
+  # click a recording in the list
+
+After loading a recording the user should see the GPS track in map canvas and the plugin should be ready for playback:
+
+http://qgismapper.googlecode.com/svn/trunk/doc/playerplugin/player_recording.png
+
+  
+On the screenshot you can see some standard plugins' tabs, a loaded track in the map canvas and a video plugin window. The following section describes interface used to navigate in the recording.
+
+== Data Sources ==
+
+*TODO*
