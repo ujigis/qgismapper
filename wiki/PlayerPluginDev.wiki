@@ -1,0 +1,90 @@
+#summary Developer documentation for Player Plugin
+
+= Player Plugin - Developer's Guide =
+
+== Structure ==
+
+Structure of the player plugin is different from the one of GatherPlugin because of the difference in functionality.
+
+The main part of the player plugin is implemented in the `PlayerPlugin` class. It provides the most basic functionality of the plugin and manages all other functionality. Other important parts are the `DockWidget` (providing GUI of the plugin), `ReplayMapTool` (enables user easy recording examination) and Source plugins (replay helpers for different types of recorded data). The following diagram shows simplified architecture of the player plugin:
+
+http://qgismapper.googlecode.com/svn/trunk/doc/playerplugin/player_overview.png
+
+
+== Components and architecture ==
+
+=== PlayerPlugin ===
+
+`PlayerPlugin` class is the one that controls the workflow of whole plugin and interconnects its parts. Apart from providing functionality required by QGIS, it handles GUI requests (like loading a new recording, starting/stopping replay) and executes necessary actions or forwards the action execution requests to other components.
+
+The basic structure of the class is very alike to `GatherPlugin` class. Class consists of three logical parts:
+  * GUI
+  * replay
+  * "support" functionality
+
+==== Initialization and finalization ====
+
+After the plugin is loaded by QGIS, the `PlayerPlugin.initGui()` method gets called. The complete initialization of plugin happens here (as recommended by QGIS docs) - dock widget is created, configuration and source plugins are loaded, map tool is created... In `PlayerPlugin.unload()` the configuration is saved, source plugins are unloaded and interface gets destroyed.
+
+==== GUI operations ====
+
+The main GUI-related functionality implemented in PlayerPlugin is the recordings list manipulation - implemented by `*Recording*` methods of the class. These methods react on user request by e.g. reading contents of specified recordings directory (and displaying it in the dedicated list widget) and loading/unloading the specified recording. All operations, except for recording loading, are simple.
+
+When a recording is about to be loaded, first it's tried to read the recorded GPX file into a `GpxFile` class. If the attempt is successful, previous recording (if exists) is unloaded and loading of the new one continues. This is done by creating a track preview vector layer and by telling all source plugins to load the current recording. Finally a current in-recording position map canvas item is created.
+
+Unloading a recording is pretty much reversed algorithm - first replay is stopped (if in progress), then source plugins are told to unload recording, map layer is removed and finally the position marker and `GpxFile` object are freed.
+
+
+==== Replay ====
+
+There are two basic ways of reviewing recorded data - either by manually rewinding the recording and using the canvas items placed on map canvas or by starting automatic replay. These two are similar in some ways, thus parts of the implementation are common for them both.
+
+We'll first discuss the automatic replay - the rest of replay code will only be an extension of the same principles.
+
+Replaying data in PlayerPlugin means that all replayed output (the current GPS position and other source plugins' data output like audio and video) has to be continuously played and synchronized - so that the current video image is shown at appropriate GPS position etc. Obviously there are data types that require less time-accuracy than others (e.g. glitches in audio replay are much more disturbing than occasional glitches in video replay). This idea was the main one when designing the player architecture. Unfortunately synchronizing two or more basically unknown data types' replays is a very hard task - even an A/V synchronization in simple video players is a non-trivial task. Because of this problem, it was decided to only try to keep the synchronization in reasonable boundaries.
+
+
+===== Timing =====
+
+The replay itself is controlled by a timer. This is the most interesting part of player architecture. Because of the already mentioned different time-accuracy of different data types, player enables external timer sources (provided by source plugins) - and provides an internal one for case when no external is available. All external timer sources are currently considered to have the same accuracy - thus if there are more sources available, a (virtually) random one of them will be used.
+
+The timer source may be set by calling `PlayerPlugin.setReplayTimeSource()`. The method's main parameter is a timer source function handle. The function has to always, when called, return current replay time position in recording. The time position is an absolute value (i.e. not relative to recording start or any other value). The reason for this is to simplify synchronization with external data, that started being recorded e.g. before the main recording started.
+
+Another important aspect of the replay is, whether the replay speed may or may not be different than 100% speed. This is set by calling the `enableScalingReplaySpeed()` call. All source plugins have to call the method, if they are to be replayed, but they don't support speed scaling. In that case, the replay scale is disabled globally. The `PlayerPlugin.replay_speed` (an integer; 100 is regular speed, < 100 slower, > 100 faster speed) has to be calculated into the current position, in case the time source's "parent" enables replay speed scaling (it's of course useless otherwise).
+
+After the replay is started, the timer source is periodically being asked about the current replay position time and all source plugins are told the current value. If the content they replay is too much out-of-sync, they have to re-sync by seeking to correct time position. What "too much" means isn't specified by the PlayerPlugin, because a different time-error is acceptable e.g. for video file (0.5s shouldn't really be a problem), than for an audio stream.
+
+
+
+===== Seeking and updating replay position =====
+
+During automatic replay, two standard "operations" are to be supported - stream seeking and and stream position updating. The latter one could be viewed on as a lazy version of the first one - we'll see why in a moment.
+
+The seek operation is performed whenever user moves the replay position slider or clicks on the GPX recorded track (with map tool active). In this case, player plugin tells all source plugins to change current replay position to the user-specified one. The seek is done by calling the `PlayerPlugin.seekReplayPosition()` method.
+
+On the other hand, the `PlayerPlugin.updateReplayPosition()` is called periodically. To be precise - `PlayerPlugin.replayTimer_tick()` is periodically called. This method calls the current replay time source and sets current replay position. Eventually, the `PlayerPlugin.updateReplayPosition()` is called with current position as a parameter. This method then updates basic map canvas markers (like current position marker) and then tells source plugins to also update replay position by calling their `updateReplayToTime` methods.
+
+Source plugins don't have to obey the replay time position update exactly. Only in case that the time parameter received by the `SourcePlugin.updateReplayToTime(time)` is too different from current time position (from perspective of the source plugin), the plugin should call e.g. `seekReplayToTime(time)`. As said before - 'too different' is data- and implementation-specific.
+
+Recording seeking note: in both cases - seeking using slider and clicking the GPX track - the seek isn't immediate, but is performed only after user releases the seeking widget (i.e. when `sliderReleased()` is received by `DockWidget` from the slider widget, or when `ReplayMapTool.canvasReleaseEvent()` is received by map tool). This is to prevent huge amount of seeking - which is a problem for some data types of source plugins. For example, if we were processing each `valueChange()` from the seek slider, user could produce 20 seeks per second by just dragging it - this leads to 20 seek commands for source plugins - and to do 20 seeks in a second on a video file produces significant seek delay.
+
+
+==== Further Visualization Options ====
+
+Apart from the standard replay scheme it's also possible for source plugins (and the player plugin itself) to place canvas items on the map canvas. However, QGIS only enables one 'controller' of the mouse actions at time. This 'controller' is a so called map tool. For user and developer convenience, a map tool is provided by PlayerPlugin that behaves contextually - depending on what canvas item the user clicks on, the "affected source plugin" executes required action.
+
+PlayerPlugin manages all the QGIS-required map tool operations - it is able to (un)set it's own map tool (implemented in the `ReplayMapTool` class) when `PlayerPlugin.useMapTool()` is called. It reacts on external map tool changes (i.e. when user activates other map tool in QGIS) - see `PlayerPlugin.mapToolChanged()` slot.
+
+The `ReplayMapTool` implementation itself is straight-forward. After user clicks on the map canvas, map tool first calls `PlayerPlugin.onMouseButtonPressed()`. That method in turn calls `onMouseButtonPressed()` method of all sources plugins. If some of the methods processes the message, the mouse click is considered processed and no further action is performed.
+
+Otherwise map tool tries to snap the mouse position on the current recorded GPX track. If this succeeds, further mouse actions (until the mouse button is released) are considered being a 'seek operation' - the current replay position is seeked so that it's as near to the mouse position as possible. 
+
+
+=== DockWidget ===
+
+Currently, no special functionality is contained in the DockWidget class - it solely provides implementation of user GUI actions. Mostly, when a GUI action is received, it's forwarded to the PlayerPlugin controller class. 
+
+
+== Source Plugins ==
+
+*TODO*
