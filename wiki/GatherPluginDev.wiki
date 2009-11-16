@@ -1,0 +1,102 @@
+#summary Developer documentation for Gather Plugin
+
+= Gather Plugin - Developer's Guide =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
+
+
+== Architecture ==
+
+To provide some first insight into the architecture, an overview diagram follows - to show approximately how the plugin is organized:
+
+http://qgismapper.googlecode.com/svn/trunk/doc/gatherplugin/gather_overview.png
+
+Main parts of the gather plugin are inside the gatherplugin.py and Gatherer.py files. These provide the most basic functionality of the plugin, managing all other functionality.
+
+The GUI of plugin is provided by DockWidget.py and DockWidget_simple.py, which do provide 2 versions of the plugin user interface to user. Additionaly, DlgSettings.py provides additional configuration options for the plugin.
+
+The only device that is handled directly by gather plugin is GPS source. The GPS devices are operated by GpsDaemon.py, GPS data are parsed by NMEA.py.
+
+All other devices are handled by so-called Source plugins, which reside inside the SourcePlugins directory.
+
+
+== Components ==
+
+=== GatherPlugin ===
+
+The `GatherPlugin` class implements the core of the plugin - the QGIS required functionality, and organizes the other parts of plugin to work together.
+Most parts of the code are self-explanatory (and/or documented in the code) - so here is only an overview of what is being done in the class, and why/how:
+
+
+==== Loading and Unloading ====
+
+After the plugin is loaded by QGIS, the `GatherPlugin.initGui()` method gets called. The complete initialization of plugin happens here (as recommended by QGIS docs) - dock widgets are created (and one of them is shown), configuration and source plugins are loaded, gps daemon is created... At `GatherPlugin.unload()`, the opposite is happening - configuration is saved, source plugins are unloaded, and interface gets destroyed.
+
+==== Data recording ====
+
+Data recording is started by `recordingStart()` method and stopped (obviously) by `recordingStop()`. The current recording status (whether it's on) is held in the `GatherPlugin.recording` member variable.
+
+A few things are required to start recording. The GUI is prepared (by initializing path preview layer and changing dock widgets' visual appearance), and a Gatherer object is created 'started' in `GatherPlugin.recordingStartGatherer()`. The opposite has to happen at recording termination.
+
+
+==== Communication with Gatherer ====
+
+As the gatherer events happen asynchronously, the `Gatherer` to `GatherPlugin` communication is happening using a event mechanism. Each time Gatherer needs to "tell something", it emits a `gathererEvent(PyQt_PyObject)` signal, which is then further processed by `GatherPlugin.processGathererEvent()` - and distributed to appropriate `GatherPlugin.processGatherEvent_*` methods (the name of called method is created from the first parameter of the signal - e.g. `gatherEvent("test", 1, 2)` would be "forwarded" as call to `GatherPLugin.processGatherEvent_test(1,2))`. Currently only two signal types are processed - `newTrackPoint` and `recordingTerminated`.
+
+The other way of communication (`GatherPlugin` to `Gatherer`) is performed directly - by calling methods of `Gatherer` object.
+
+
+=== Gatherer ===
+
+The Gatherer object serves as the main controller thread for the recording (=gathering) process. It's meant as one-run-per-life object - each recording should use a new `Gatherer` object.
+
+Because the Qt library doesn't support GUI processing in threads other the main one, the Gatherer architecture had to be designed in a not-so-straightforward way. To simplify design of (trivial) source plugins, Gatherer is designed in way that `startRecording` and `stopRecording` methods of source plugins are called from the main application thread. Source plugins (SP) may update their UI out of the separate Gatherer thread (other SP methods are called from this new thread). The following recording process flow chart could clarify the situation:
+
+http://qgismapper.googlecode.com/svn/trunk/doc/gatherplugin/gather_gatherer.png
+
+From the diagram it's possible to see what methods are called in which thread's context. It's also possible to see how the recording-terminated event is sent to GatherPlugin. After the recording is terminated, GatherPlugin calls `Gatherer.terminateAndCleanup()`, which in turn calls `SourcePlugin.stopRecording()` and `gpsDaemon.stopRecording()`.
+
+
+==== Data recording logic ====
+
+The current Gatherer design assumes two types of data being recorded - one that doesn't necessarily need real-time/heavy processing, and a second one of opposite type.
+
+Workflow of simple data is that after `startRecording()` is called, they briefly initialize what they need and they do finalization at `stopRecording()`. During the recording, the `pollRecording()` is periodically called to get any new data (since the last poll) and store it as needed. It's assumed that neither of the three methods takes too much time - otherwise it would block GUI thread and/or polling of other source plugins.
+
+More time-precision/cpu power dependent data need of course special treating. Gatherer assumes that during the `startRecording()` another separate processing thread (or threads/process(es) if necessary) is created inside the source plugin and it is terminated cleanly (again by the source plugin itself) after `stopRecording()` is called. The `pollRecording` method is typically useless in this case - the whole recording is in hands of the source plugin.
+
+
+=== UI ===
+
+There are three main GUI components that the GP uses. Two are dock widgets that inform user about the current status of recording and enable him to do some changes in configuration (recording, source plugins, visual appearance of recorded track etc.). Moreover there is `DlgSettings` dialog that currently enables user to configure the GPS device. As the `DlgSettings` dialog is pretty trivial, we won't discuss it here any further.
+
+Two types of dock widgets were implemented, because it's assumed that the GP could be used with small screens - and the complete 'big' dock widget occupies too much of screen space. The small dock widget therefore only contains the most important information to only inform user whether the recording is still uninterrupted by some errors.
+
+
+==== DockWidget ====
+
+Apart from standard recording controls, in the big dock widget there is a place where custom widgets of source plugins may be placed - to enable user changing their configuration. To simplify the insertion, each source plugin class has to be derived from QWidget class - and it is inserted into the SourcePlugins tab control under title specified by `SourcePluginObject.name` string.
+
+Apart from handling user GUI actions (either by updating other child widgets properties, or by forwarding messages to GatherPlugin controller), the DockWidget class is pretty much trivial.
+
+
+==== DockWidget_simple ====
+
+The simple dock widget (SDW) shows only recording button, a few status lines/checkboxes and a button to "return" to "full DockWidget".
+
+The SDW (currently) doesn't update its contents according to installed source plugins - it's hard-coded and the source plugins may retrieve appropriate checkbox by calling the `GatherPlugin.getRecordingEnabledAuxCheckbox()` method with the name string of requested widget (mostly a checkbox). The name is to be the same as the `SourcePlugin.name` (e.g. "Video") to keep some order. If widget with specified name isn't contained in the dialog, the method returns `None`. "Gps", as exception, returns a (`GpsStatusWidget`, `QLabel`) pair - source plugin `PluginGps` expects this.
+
+Source plugins are completely unlimited on what to do with the checkboxes - it's however recommended that they work the same way that "Recording enabled" checkbox would work. It's also possible to change string of the checkbox (keep it short and informative - even in case of error; also remember to manipulate with the checkbox only in the main GUI thread).
+
+Note that the `GatherPlugin.getRecordingEnabledAuxCheckbox()` functionality is only available to source plugins when (and/or after) the `SourcePlugin.finalizeUI()` is called.
+
+== GpsDaemon ==
+
+*TODO*
+
+== Source Plugins ==
+
+*TODO*
