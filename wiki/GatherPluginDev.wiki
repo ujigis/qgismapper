@@ -303,7 +303,7 @@ Contents of the widget are, as for any other widget, redrawn whenever a `paintEv
 
 === Creating a source plugin ===
 
-A source plugin provides a interface for gather plugin to record data from a device. Source plugin interface is pretty simple and straightforward. To create a source plugin, one has to create a file named Plugin*.py (where * stands for a alphanumeric string) in the SourcePlugins directory of the gather plugin. A sample implementation of a plugin is placed in PluginDummy.py, distributed with the project.
+A source plugin provides a interface for gather plugin to record data from a device. Source plugin interface is pretty simple and straightforward. To create a source plugin, one has to create a file named Plugin`*`.py (where `*` stands for a alphanumeric string) in the SourcePlugins directory of the gather plugin. A sample implementation of a plugin is placed in PluginDummy.py, distributed with the project.
 
 The file has to contain 2 things - a factory function and a definition of plugin class. The factory function (`getInstance()`) creates the plugin object and returns it. Most of the time, the method will probably look like the one in PluginDummy.py
 
