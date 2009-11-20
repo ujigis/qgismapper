@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 def name():
-	return "Data gather plugin"
+	return "Data Gather Plugin"
 def description():
-	return "Gathers data from GPS/camera/mic... and exports it for later use"
+	return "QGIS Mapper - Capture tool"
 def version():
-	return "Version 0.1"
+	return "Version 0.2"
 def qgisMinimumVersion():
 	return "1.0.0"
 def classFactory(iface):
