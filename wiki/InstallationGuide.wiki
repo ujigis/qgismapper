@@ -1,0 +1,62 @@
+#summary How to install QGIS Mapper
+
+= Installation Guide =
+
+This page describes how to install QGIS Mapper project.
+
+The project consists of two parts: Data capture tool and replay tool. Both of them are implemented as (Python) plugins for [http://www.qgis.org/ Quantum GIS]. Prior to downloading the plugins it's necessary to install *qgismapper library* that is responsible for hardware handling (cameras, microfone etc). Without the library it's not possible to run the plugins.
+
+The whole installation process can be split into three steps.
+
+== Step 1: Quantum GIS ==
+
+First of all you'll need to have Quantum GIS installed on your computer.
+
+You can get it from the [http://www.qgis.org/en/download.html download page] either as a binary package or you can compile it from source code.
+
+
+== Step 2: qgismapper Library ==
+
+Currently there are no binary packages available so you'll have to compile the library from source.
+
+=== Dependencies ===
+
+For compilation you'll need:
+  * Subversion
+  * CMake
+  * Qt4
+  * Python
+  * SIP
+  * PyQt4
+
+Dependencies for optional features:
+  * *video capture* - *ffmpeg* libraries and development files (ubuntu packages: libavformat-dev libavdevice-dev libavcodec-dev libavutil-dev libswscale-dev)
+  * *audio capture/replay* - PortAudio and OGG Vorbis libraries and development files (ubuntu packages: portaudio19-dev libogg-dev libvorbis-dev)
+  * *ladybug2 capture* - dc1394 library and development files (ubuntu package: libdc1394-22-dev)
+
+=== Installation ===
+
+  # Check out source code from Subversion repository:
+  {{{svn checkout http://qgismapper.googlecode.com/svn/trunk/mapper}}}
+  # Configure the project: create a build directory and run `cmake`
+  # Modify configuration variables (using `cmake-gui` or `ccmake`). Interesting variables:
+    * *WITH_AUDIO* - enable support for audio capture/replay. Default: *OFF*
+    * *WITH_VIDEO* - enable support for video capture. Default: *OFF*
+    * *WITH_LADYBUG* - enable support for Ladybug2 spherical camera. Default: *OFF*
+  # Build and install the project (run `make` and `make install`)
+
+
+
+== Step 3: Plugins ==
+
+The last step is to install GatherPlugin and/or PlayerPlugin:
+  # Start Quantum GIS
+  # Open menu Plugins -> Fetch Python Plugins... This will fetch updates for plugins and open Plugin Installer
+  # Select "Repositories" tab in the Plugin Installer dialog and click "Add" button
+  # In newly opened dialog use "QGIS Mapper" as repository name and use following address as URL:
+    {{{ http://qgismapper.googlecode.com/svn/trunk/plugins/plugins.xml }}}
+  # After clicking OK the installer will fetch information about this newly added repository
+  # In "Plugins" tab now you should see two new plugins in the list:
+    * *Data Gather Plugin*
+    * *Data Player Plugin*
+  # Install the plugins and enable them in Plugin Manager (menu Plugins -> Manager Plugins...)
