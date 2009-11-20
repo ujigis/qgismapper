@@ -19,6 +19,10 @@ The plugin supports any cameras that are recognized by Video4Linux (version 1 or
 
 Video capture is currently available only on Linux (but should be possible to extend on Windows platform too).
 
+== Digital cameras ==
+
+It's possible to take pictures with any digital camera while recording. The player plugin supports geotagging using the EXIF information from the pictures.
+
 == Ladybug2 ==
 
 From the [http://www.ptgrey.com/products/ladybug2/index.asp Ladybug2 product home page]:
