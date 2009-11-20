@@ -133,7 +133,7 @@ Whenever `onMouseButtonPressed()` method is called, all note markers are checked
 Photo plugin allows user to associate pictures to recording offline (after recording took place). The plugin consists of three logical parts. The first one is the `PluginPhoto` class, managing all the plugin functionality. When a recording is loaded or new images are added to the current recording, small previews (thumbnails) of photos have to be created - this is provided by the `ThumbnailCache`. Finally, after all image previews are cached, canvas items have to be created to display the photos to the user in a convenient way. The following diagram explains the structure visually:
 
 http://qgismapper.googlecode.com/svn/trunk/doc/playerplugin/player_dev_photo1.png
- 
+
 The continuous arrows on the right side of diagram show "uses" relation (e.g. `PhotosCanvasItem` uses `ThumbnailCache` to retrieve thumbnails of contained photos). Non-continuous arrows mean parent-derived class relationship.
 
 ==== Loading a recording ====
@@ -192,6 +192,38 @@ The `updatePlayState()` first determines current replay position of the `VideoPl
 
 Finally, the last component made by us is the `VideoPlayerWidget`. The widget uses pymplayer "library" to start MPlayer and embed it into the own widget - this happens at `openFile()`. Also, several video file parameters (like length, fps etc.) are retrieved at this time - and may be retrieved later by "user". Because of the way MPlayer is controlled (by redirecting it's stdin/out streams), the data are periodically tried to be read from it's stdout stream by `VideoPlayerWidget.handleMplayerData()` method. `VideoPlayerWidget` also keeps the current video play state of the MPlayer (in the `vidPlaying` variable), because it's fairly problematic to retrieve current play/pause state of the MPlayer - without moving the current replay position to the next frame.
 
-== Creating a Source Plugin ==
+== Creating New Source Plugins ==
 
-*TODO*
+A source plugin provides an interface for player plugin to replay data from a stored device-depedent format (stored previously by gather-counterpart source plugin).
+
+Source plugin interface is pretty simple and straightforward. To create a source plugin, one has to create a file named Plugin*.py (where * stands for a alphanumeric string) in the SourcePlugins directory of the player plugin. A sample implementation of a plugin is placed in PluginDummy.py distributed with the project.
+
+The file has to contain two things - a factory function and a definition of plugin class. The factory function (`getInstance()`) creates the plugin object and returns it. Most of the time, the method will probably look like the one in PluginDummy.py.
+
+
+=== Plugin object functionality ===
+
+The plugin object has to provide some required functionality in order to work correctly. First of all, the object has to be derived from `QWidget`, as is used in the PP user interface as a configuration tab. The widget is inserted to the tab control automatically and has title based on the object's property "name" (which is also a required).
+
+The pair of methods `loadConfig()` and `saveConfig()` load and save configuration. They receive root element of a XML file which they should use.
+
+When `loadRecording()` and `unloadRecording()` are called, plugin should either load recording from specified directory or unload the current one. The exact path is not implied and depends on where/how data was stored by recording counterpart.
+
+The main functionality of replay plugin is handled by `startReplay()`, `stopReplay()`, `updateReplayToTime()` and `seekReplayToTime()` methods. After the `startReplay()` call, the plugin should start replaying, while not blocking the parent thread. The `stopReplay()` should do the opposite - immediately stop replay.
+
+The `updateReplayToTime()` and `seekReplayToTime()` methods are somewhat special. The `updateReplayToTime()` is called from the controller to notify the source plugin on current replay position. This serves for a simple synchronization so that all replay plugins have +- the same position in recording. It's up on the plugin what to do with the time - however it's suggested that the difference between the received time and real time of replay of plugin's data is kept below some meaningful value (which should be e.g. 0.1-0.5 seconds).
+
+The `seekReplayToTime()` is called whenever user manually tries to change current replay position of the recording (e.g. seeks by moving the current recording position slider in the user interface). Replay plugin should immediately seek recording replay to specified time.
+
+Method `onMouseButtonPressed()` is called when player map tool is active and it receives a mouse press event (receives mouse button, map canvas and layer coordinates of the press). If method returns `False`, other plugins are allowed to handle the event, otherwise the mouse event is considered as processed.
+
+
+=== Controller functionality available to plugins ===
+
+Synchronization is the most important part of replay. However, it's not quite trivial to synchronize different sources of unknown time-precision characteristics. The controller provides plugins a 'standard precision timing' by using a timer to calculate current position in replay - the replay position is then submitted to plugins by calling their `updateReplayToTime()` methods as mentioned above. This timer may not be too accurate and if, for example, audio track was synchronized to this timer, there probably would be many glitches.
+
+Because of that, the controller object (passed to source plugins' constructors) provides two methods to enable plugins to provide a more precise timing and replace the internal timer. The methods are `controller.setReplayTimeSource(source)` and `controller.enableScalingReplaySpeed(source, initPos)`.
+
+Method `setReplayTimeSource(source, initTime)` sets the timer function to the specified one (or the internal, if set to `None`). The specified method is then periodically called (instead of the internal timer) to retrieve timer's value (in seconds, floating point number) of current position in recording. If no timer source is provided, the `initTime` parameter tells the internal controller's timer, what's the current position. Note that if there are more source plugins trying to provide custom timer source, they are all considered to be equally accurate - and thus a random one will be used. Because of that it's not granted, that once the method is called, the specified source is really used. Also note that the method may be called even during active replay (so it's possible to start/stop replay of particular source, depending on state of UI for the specified source plugin).
+
+Method `enableScalingReplaySpeed()` tells the controller whether the current plugin allows scaling of replay speed (e.g. whether it's possible to replay the source plugin's data at 2x the nominal speed). If some of the used source plugins doesn't allow speed scaling, the functionality will be disabled completely. So it's wise to disable the scaling only if there are data stored for the particular source plugin don't allow scaling.
