@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 def name():
-	return "Data player plugin"
+	return "Data Player Plugin"
 def description():
-	return "Replays data previously gathered by gatherer plugin"
+	return "QGIS Mapper - Replay tool"
 def version():
-	return "Version 0.1"
+	return "Version 0.2"
 def qgisMinimumVersion():
 	return "1.0.0"
 def classFactory(iface):
