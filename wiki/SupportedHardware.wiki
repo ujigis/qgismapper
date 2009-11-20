@@ -8,6 +8,9 @@ This page summarizes what hardware can be used as data sources when recording.
 
 Nearly any GPS receiver with data output can be used: there's direct support for NMEA-0183 format and there's a support for data from [http://gpsd.berlios.de/ GPS daemon] (gpsd). It features a long [http://gpsd.berlios.de/hardware.html list of supported devices] including GPS receivers with proprietary output format (e.g. Garmin binary protocol). Gpsd is not available for Windows platform, but there seem to be some Windows ports.
 
+== Digital compass ==
+
+A compass with NMEA-0183 compliant output can be used to calculate exact bearing. This is useful especially when using video cameras to know precisely how the camera(s) are directed.
 
 == Audio ==
 
