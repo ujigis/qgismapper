@@ -1,0 +1,28 @@
+#summary A brief of hardware supported by the GatherPlugin
+
+= Supported Hardware =
+
+This page summarizes what hardware can be used as data sources when recording.
+
+== GPS ==
+
+Nearly any GPS receiver with data output can be used: there's direct support for NMEA-0183 format and there's a support for data from [http://gpsd.berlios.de/ GPS daemon] (gpsd). It features a long [http://gpsd.berlios.de/hardware.html list of supported devices] including GPS receivers with proprietary output format (e.g. Garmin binary protocol). Gpsd is not available for Windows platform, but there seem to be some Windows ports.
+
+
+== Audio ==
+
+The plugin always uses default input. It's up to user to configure system's audio settings: whether to use front microphone, line in plug or some other input.
+
+== Video ==
+
+The plugin supports any cameras that are recognized by Video4Linux (version 1 or version 2). That means that most of the integrated webcams and USB cameras should work.
+
+Video capture is currently available only on Linux (but should be possible to extend on Windows platform too).
+
+== Ladybug2 ==
+
+From the [http://www.ptgrey.com/products/ladybug2/index.asp Ladybug2 product home page]:
+
+_Ladybug®2 spherical digital video camera system has six 0.8 MP cameras that enable the system to collect video from more than 75% of the full sphere, and an IEEE-1394b interface that allows streaming to disk at 30fps._
+
+There's support for data capture and replay of Ladybug2 streams. Data capture is currently available on Linux only (using dc1394 library).
