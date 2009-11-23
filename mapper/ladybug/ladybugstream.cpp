@@ -105,6 +105,9 @@ bool LadybugStream::close()
   // finish some tasks when writing
   if (mMode == Writing)
   {
+    // now we should be at the end
+    int endPos = mFile.pos();
+
     // update image count
     mFile.seek(16 + 0x88);
     mFile.write((const char*) &mNumFrames, 4); // num frames
@@ -116,9 +119,37 @@ bool LadybugStream::close()
       mFile.seek(16 + 0xbec - (i*4));
       mFile.write((const char*) (mOffsets+i), 4);
     }
+
+    // save gps summary (if there's any)
+    if (mGpsInfo.count() > 0)
+    {
+      mFile.seek(16 + 0x98);
+      mFile.write((const char*) &endPos, 4);
+      int itemSize = 4+8+8+8;
+      int count = mGpsInfo.count();
+      int size = 16+16+4+4+ count*itemSize;
+      mFile.write((const char*) &size, 4);
+      // append a block
+      mFile.seek(endPos);
+      mFile.write("GPSSUMMARY_00001", 16);
+      mFile.write("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16);
+      mFile.write((const char*) &itemSize, 4);
+      mFile.write((const char*) &count, 4);
+      foreach (int frame, mGpsInfo.keys())
+      {
+        const LadybugGpsInfo& gpsInfo = mGpsInfo.value(frame);
+        mFile.write((const char*) &frame, 4);
+        mFile.write((const char*) &gpsInfo.lon, 8);
+        mFile.write((const char*) &gpsInfo.lat, 8);
+        mFile.write((const char*) &gpsInfo.alt, 8);
+      }
+    }
   }
 	
 	mFile.close();
+
+  mGpsInfo.clear();
+
   return true;
 }
 
@@ -327,6 +358,36 @@ bool LadybugStream::openForReadingInternal(int fileIndex, int firstFrame)
     tmpOffset = mOffsets[i];
     mOffsets[i] = mOffsets[511-i];
     mOffsets[511-i] = tmpOffset;
+  }
+
+  // try to read gps data
+  if (header.ulGPSDataSize != 0)
+  {
+    mFile.seek(header.ulGPSDataOffset);
+    if (mFile.read(16) == QByteArray("GPSSUMMARY_00001"))
+    {
+      mFile.read(16); // reserved - zeros
+      int itemSize = 0;
+      mFile.read((char*)&itemSize, 4);
+      if (itemSize == 28)
+      {
+        int count = 0;
+        mFile.read((char*)&count, 4);
+        for (int i = 0; i < count; i++)
+        {
+          int frame = 0;
+          double lon,lat,alt;
+          mFile.read((char*)&frame, 4);
+          mFile.read((char*)&lon, 8);
+          mFile.read((char*)&lat, 8);
+          mFile.read((char*)&alt, 8);
+          mGpsInfo.insert(frame, LadybugGpsInfo(lon,lat,alt));
+          printf("gps: %d | LON %.5f | LAT %.5f | ALT %.1f\n", frame, lon, lat, alt);
+        }
+      }
+    }
+    else
+      printf("gps summary fingerprint not recognized\n");
   }
 
   // go to the position of first image
@@ -554,4 +615,12 @@ uint LadybugStream::frameTime(int frameId)
   mFile.seek(framePos);
 
  return imgMsecs;
+}
+
+
+void LadybugStream::setCurrentGpsInfo(LadybugGpsInfo& gpsInfo)
+{
+  int frame = (mFile.isOpen() ? mNumFrames : 0);
+  mGpsInfo[frame] = gpsInfo;
+  printf("(-: set gpsinfo for frame %d\n", frame);
 }

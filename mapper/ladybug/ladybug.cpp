@@ -335,6 +335,7 @@ public:
   bool active;
   LadybugCounter counter;
   QMutex mutexCamera;
+  double lon,lat;
 };
 
 Ladybug::Ladybug()
@@ -344,6 +345,7 @@ Ladybug::Ladybug()
   d = new LadybugPrivate(*this);
 	d->serialHead = 0;
   d->active = false;
+  d->lon = d->lat = 0;
 }
 
 Ladybug::~Ladybug()
@@ -636,4 +638,9 @@ bool Ladybug::jpegCompression(bool& autoControl, int& jpgQuality, int& bufferUsa
 LadybugCounter& Ladybug::counter()
 {
   return d->counter;
+}
+
+void Ladybug::setCurrentGpsInfo(LadybugGpsInfo& gpsInfo)
+{
+  d->thread.setCurrentGpsInfo(gpsInfo);
 }

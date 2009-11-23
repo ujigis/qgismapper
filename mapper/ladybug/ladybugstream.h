@@ -11,6 +11,7 @@
 #define LADYBUGSTREAM_H
 
 #include <QFile>
+#include <QMap>
 
 typedef unsigned int uint32;
 
@@ -24,6 +25,14 @@ public:
     QByteArray calibration;
     uint32 serialBase;
     uint32 serialHead;
+};
+
+//
+class LadybugGpsInfo
+{
+public:
+  LadybugGpsInfo(double lon_ = 0, double lat_ = 0, double alt_ = 0) : lon(lon_), lat(lat_), alt(alt_) {}
+  double lon,lat,alt;
 };
 
 
@@ -62,6 +71,8 @@ public:
   bool seekToTime(unsigned int miliseconds);
 
   ulong currentFrame() const;
+
+  void setCurrentGpsInfo(LadybugGpsInfo& gpsInfo);
 
 protected:
   static QString pgrFilename(QString baseName, int index);
@@ -104,6 +115,9 @@ protected:
   int mTotalNumFiles;
   QList<int> mFirstFrameList;
   int mFirstFrame;
+
+  // maps image number to gps info (not all images have gps info)
+  QMap<int, LadybugGpsInfo> mGpsInfo;
 };
 
 #endif

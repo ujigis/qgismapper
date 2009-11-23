@@ -3,7 +3,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PluginLadybug_ui import Ui_PluginLadybug
 
-from qgismapper.ladybug import Ladybug, LadybugFrame
+from qgismapper.ladybug import Ladybug, LadybugFrame, LadybugGpsInfo
 
 import os, sys, traceback
 
@@ -86,7 +86,7 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		  self.lblRecord.setText("Off")
 		  self.lblDiscarded.setText("None")
 		else:
-		  self.lblRecord.setText(" %d frames\n%.1f MiB" % (self.written[1], self.written[0]) )
+		  self.lblRecord.setText("%d frames\n%.1f MiB" % (self.written[1], self.written[0]) )
 		  self.lblDiscarded.setText("%d frames" % self.frames_discarded)
 		if self.frames_behind == 0:
 		  self.lblLag.setText("None")
@@ -143,6 +143,8 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		to use all of it's standard functionality...
 		(e.g. controller.getRecordingEnabledAuxCheckbox)
 		"""
+		QObject.connect(self.controller.gpsDaemon, SIGNAL("newTrackPoint(PyQt_PyObject)"), self.updateGpsInfo)
+
 		self.initCapture()
 		self.recordingEnabledDisabled()
 		
@@ -175,6 +177,16 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		
 		self.cam.stopRecording()
 		
+	def updateGpsInfo(self):
+		""" tell ladybug about the position """
+		gpsStatus = self.controller.gpsDaemon.getStatus()
+		if not gpsStatus:
+			return # we're not connected
+
+		np=self.controller.getNmeaParser()
+		if np.validPos:
+			self.cam.setCurrentGpsInfo( LadybugGpsInfo(np.lon, np.lat, np.altitude) )
+
 
 	# CONFIGURATION LOAD/SAVE
 

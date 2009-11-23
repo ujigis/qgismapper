@@ -243,6 +243,11 @@ bool LadybugThread::isRecording()
   return mRecordingThread.isRecording();
 }
 
+void LadybugThread::setCurrentGpsInfo(LadybugGpsInfo& gpsInfo)
+{
+  mRecordingThread.setCurrentGpsInfo(gpsInfo);
+}
+
 
 //--------------------
 // RECORDING THREAD
@@ -348,4 +353,10 @@ void LadybugRecordingThread::writeImage(LadybugImage& img)
 
   mNewImage.wakeOne();
 
+}
+
+void LadybugRecordingThread::setCurrentGpsInfo(LadybugGpsInfo& gpsInfo)
+{
+  QMutexLocker lock(&mRecordingMutex);
+  mStream.setCurrentGpsInfo(gpsInfo);
 }
