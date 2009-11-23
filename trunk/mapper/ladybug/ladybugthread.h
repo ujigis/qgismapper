@@ -44,6 +44,8 @@ public:
     ulong framesCount() const { return mStream.framesCount(); }
     int framesDiscarded() const { return mFramesDiscarded; }
 
+    void setCurrentGpsInfo(LadybugGpsInfo& gpsInfo);
+
 protected:
     QMutex mRecordingMutex;
 
@@ -87,6 +89,8 @@ public:
     void stopRecording();
     bool isRecording();
 
+    void setCurrentGpsInfo(LadybugGpsInfo& gpsInfo);
+
 signals:
     void capturedFrame(LadybugFrame frame);
 
@@ -113,6 +117,8 @@ protected:
     QMutex mCameraMutex;
 
     LadybugRecordingThread mRecordingThread;
+
+    LadybugGpsInfo mLastGpsInfo;
 };
 
 #endif // LADYBUGTHREAD_H

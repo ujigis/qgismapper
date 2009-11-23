@@ -20,7 +20,7 @@ typedef unsigned int uint32;
 
 //class LadybugFrame;
 
-
+class LadybugGpsInfo;
 
 class LadybugFrame
 {
@@ -90,6 +90,8 @@ public:
   bool jpegCompression(bool& autoControl, int& jpgQuality, int& bufferUsage);
 
   LadybugCounter& counter();
+
+  void setCurrentGpsInfo(LadybugGpsInfo& gpsInfo);
 
 public slots:
     void receivedFrame(LadybugFrame frame);

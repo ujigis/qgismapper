@@ -6,6 +6,7 @@
 %UnitCode
 #include <ladybug.h>
 #include <ladybugwidget.h>
+#include <ladybugstream.h>
 %End
 
 
@@ -77,6 +78,8 @@ public:
 
   LadybugCounter& counter();
 
+  void setCurrentGpsInfo(LadybugGpsInfo& gpsInfo);
+
 public slots:
     void receivedFrame(LadybugFrame frame);
 
@@ -123,4 +126,13 @@ protected:
 
   uint cameraMask();
 
+};
+
+class LadybugGpsInfo
+{
+public:
+  LadybugGpsInfo(double lon = 0, double lat = 0, double alt = 0);
+  double lon;
+  double lat;
+  double alt;
 };
