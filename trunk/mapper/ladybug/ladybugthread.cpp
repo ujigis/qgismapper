@@ -153,11 +153,13 @@ void LadybugThread::processFrame(LadybugFrame& f, LadybugImage& image)
       mRecordingThread.writeImage( image ); // copy data!
       f.megabytesWritten = mRecordingThread.megabytesWritten();
       f.framesWritten = mRecordingThread.framesCount();
+      f.framesDiscarded = mRecordingThread.framesDiscarded();
     }
     else
     {
       f.megabytesWritten = 0;
       f.framesWritten = 0;
+      f.framesDiscarded = 0;
     }
 
     int camMask;
@@ -248,6 +250,7 @@ bool LadybugThread::isRecording()
 LadybugRecordingThread::LadybugRecordingThread()
 {
   mRecording = false;
+  mFramesDiscarded = 0;
 }
 
 bool LadybugRecordingThread::startRecording(QString streamName, LadybugInfo camInfo)
@@ -340,6 +343,7 @@ void LadybugRecordingThread::writeImage(LadybugImage& img)
     int at = random() % mImageQueue.count();
     fprintf(stderr, "queue full, discarding a frame! (%d)\n", at);
     delete mImageQueue.takeAt(at);
+    mFramesDiscarded++;
   }
 
   mNewImage.wakeOne();

@@ -42,6 +42,7 @@ public:
 
     double megabytesWritten() const { return mStream.megabytesWritten(); }
     ulong framesCount() const { return mStream.framesCount(); }
+    int framesDiscarded() const { return mFramesDiscarded; }
 
 protected:
     QMutex mRecordingMutex;
@@ -53,6 +54,9 @@ protected:
 
     // used only within the thread!
     LadybugStream mStream;
+
+    // counter of discarded frames
+    int mFramesDiscarded;
 };
 
 

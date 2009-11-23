@@ -27,6 +27,7 @@ public:
 
   double megabytesWritten;
   int framesWritten;
+  int framesDiscarded; // num. of discarded frames due full write buffer
 };
 
 

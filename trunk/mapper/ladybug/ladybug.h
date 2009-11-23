@@ -27,7 +27,8 @@ class LadybugFrame
 
 public:
   LadybugFrame() : framesBehind(0),valid(FALSE),
-    frameBytes(0), hasPreview(FALSE), megabytesWritten(0), framesWritten(0) { for (int i=0; i<6; i++) preview.append(QImage()); }
+    frameBytes(0), hasPreview(FALSE), megabytesWritten(0), framesWritten(0), framesDiscarded(0)
+  { for (int i=0; i<6; i++) preview.append(QImage()); }
 
   QImage previewImage(int cam) { return preview.at(cam); }
 
@@ -39,6 +40,7 @@ public:
 
   double megabytesWritten;
   int framesWritten;
+  int framesDiscarded; // num. of discarded frames due full write buffer
 };
 
 //Q_DECLARE_METATYPE(LadybugFrame)

@@ -38,21 +38,20 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		self.num_mbytes = 0
 		self.written = (0,0) # megabytes, frames
 		self.frames_behind = 0
+		self.frames_discarded = 0
 		
 		self.timerFps = QTimer()
 		self.connect(self.timerFps, SIGNAL("timeout()"), self.updateFps)
 		self.timerFps.start(1000)
 		
-		QObject.connect(self.chkPreview, SIGNAL("clicked(bool)"), self.previewClicked)
-		QObject.connect(self.chkColor, SIGNAL("clicked(bool)"), self.colorClicked)
 		QObject.connect(self.cboCamera, SIGNAL("currentIndexChanged(int)"), self.cameraChanged)
 
 		# TODO: ak spustim kameru tu tak to spadne
 		
 		# config defaults
 		self.preview = True
-		self.color = False
-		self.cam_index = 2
+		self.color = True
+		self.cam_index = 1
 		
 		self.lblRecord.setText("") # what to show there when idle?
 		
@@ -63,27 +62,18 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		if self.cam.isActive():
 			self.cam.exit()
 
-	def previewClicked(self, checked):
-		""" preview checkbox has been turned on/off """
-		self.updatePreviewSettings()
-		
-	def colorClicked(self, checked):
-		self.updatePreviewSettings()
-		
 	def cameraChanged(self, index):
 		self.cam_index = index
 		self.updatePreviewSettings()
 		
 	def updatePreviewSettings(self):
 		interval = 100
-		color = self.chkColor.isChecked()
-		preview = self.chkPreview.isChecked()
-		camMask = (1 << self.cam_index) if preview else 0
+		color = True # always use color picture
+		preview = (self.cam_index != 0) # first option is "no preview"
+		camMask = (1 << (self.cam_index-1)) if preview else 0
 		self.cam.setPreviewSettings(camMask, color, interval)
 		
 		# update gui
-		self.chkColor.setEnabled(preview)
-		self.cboCamera.setEnabled(preview)
 		self.widgetPreview.setImg(QImage())
 
 	def updateFps(self):
@@ -94,8 +84,10 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		self.num_mbytes = 0
 		if not self.cam.isRecording():
 		  self.lblRecord.setText("Off")
+		  self.lblDiscarded.setText("None")
 		else:
-		  self.lblRecord.setText(" %d frames / %.1f MiB" % (self.written[1], self.written[0]) )
+		  self.lblRecord.setText(" %d frames\n%.1f MiB" % (self.written[1], self.written[0]) )
+		  self.lblDiscarded.setText("%d frames" % self.frames_discarded)
 		if self.frames_behind == 0:
 		  self.lblLag.setText("None")
 		else:
@@ -117,8 +109,9 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 				self.num_frames += 1
 				self.written = (f.megabytesWritten, f.framesWritten)
 				self.frames_behind = f.framesBehind
+				self.frames_discarded = f.framesDiscarded
 
-				img = f.previewImage(self.cam_index)
+				img = f.previewImage(self.cam_index-1 if self.cam_index > 0 else 0)
 				if not img.isNull():
 					self.widgetPreview.setImg(img)
 		except:
@@ -133,19 +126,7 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		self.capturing = self.cam.init()
 		if self.capturing:
 			self.lblStatus.setText("OK")
-			"""
-			(mask,color,interval) = self.cam.previewSettings()
-			self.chkPreview.setChecked( mask != 0 )
-			self.chkColor.setChecked( color )
-			self.cam_index = 0
-			for idx in range(6):
-			  if mask & (1<<idx):
-			    self.cam_index = idx
-			    break
-			self.cboCamera.setCurrentIndex(self.cam_index)
-			"""
-			self.chkPreview.setChecked( self.preview )
-			self.chkColor.setChecked( self.color )
+
 			self.cboCamera.setCurrentIndex(self.cam_index)
 			
 			self.updatePreviewSettings()
@@ -176,8 +157,8 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		if not self.cam.isActive():
 		  # TODO: do something? a warning?
 		  return
-		  
-		self.setEnabled(False)
+		
+		self.btnEnableRecording.setEnabled(False)
 		
 		self.dataDirectory=dataDirectory+self.name+"/"
 		if not os.path.isdir(self.dataDirectory):
@@ -190,7 +171,7 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		"""
 		Terminate recording of stream
 		"""
-		self.setEnabled(True)
+		self.btnEnableRecording.setEnabled(True)
 		
 		self.cam.stopRecording()
 		
@@ -204,9 +185,7 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		"""
 		if not rootElement:
 			return
-		self.preview = bool( rootElement.attribute("preview", "1").toInt()[0] )
-		self.color = bool( rootElement.attribute("color", "0").toInt()[0] )
-		self.cam_index = rootElement.attribute("camera", "2").toInt()[0]
+		self.cam_index = rootElement.attribute("camera", "1").toInt()[0]
 		
 		self.btnEnableRecording.setChecked( rootElement.attribute("recordingEnabled", "1").toInt()[0] )
 		
@@ -216,8 +195,6 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		This method should save plugin's configuration to and
 		under the specified QtXml element.
 		"""
-		rootElement.setAttribute("preview", "1" if self.chkPreview.isChecked() else "0" )
-		rootElement.setAttribute("color", "1" if self.chkColor.isChecked() else "0" )
 		rootElement.setAttribute("camera", str(self.cboCamera.currentIndex()) )
 
 		rootElement.setAttribute("recordingEnabled", "1" if self.btnEnableRecording.isChecked() else "0")

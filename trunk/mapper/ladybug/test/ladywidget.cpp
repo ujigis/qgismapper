@@ -51,17 +51,20 @@ void LadyWidget::paintEvent(QPaintEvent * event)
 	p.drawText(20,60, txt);
   if (mCam.isRecording())
 	{
-    txt = "recording " + QString::number(mLastFrame.megabytesWritten,'f',1) + " MB/s, frames " + QString::number(mLastFrame.framesWritten);
+    txt = QString("REC: %1 MB/s, %2 frames, %3 discarded")
+            .arg(mLastFrame.megabytesWritten, -1, 'f',1)
+            .arg(mLastFrame.framesWritten)
+            .arg(mLastFrame.framesDiscarded);
 		p.drawText(20,80, txt);
 	}
 
   bool autoControl;
   int jpgQuality, bufferUsage;
   mCam.jpegCompression(autoControl, jpgQuality, bufferUsage);
-  p.drawText(20,100, QString("%1 / %2 / %3").arg(autoControl).arg(jpgQuality).arg(bufferUsage));
+  p.drawText(20,100, QString("JPG: auto %1 / quality %2 / usage %3").arg(autoControl).arg(jpgQuality).arg(bufferUsage));
 
   const LadybugCounter& c = mCam.counter();
-  p.drawText(20,120, QString("%1 / %2 / %3").arg(c.framesGood).arg(c.framesInvalid).arg(c.framesMissing));
+  p.drawText(20,120, QString("good %1 / invalid %2 / missing %3").arg(c.framesGood).arg(c.framesInvalid).arg(c.framesMissing));
 
 }
 
