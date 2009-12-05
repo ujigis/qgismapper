@@ -209,7 +209,7 @@ class PlayerPlugin(QObject):
 		
 	def loadDefaults(self):
 		""" Load default configuration values """
-		self.source_directory=os.path.expanduser("~/qgis_mapper/gathered_data/")
+		self.source_directory=os.path.expanduser("~/qgismapper/data/")
 		self.replay_followPosition=True
 		self.replay_speed=100
 	
@@ -236,7 +236,8 @@ class PlayerPlugin(QObject):
 	
 	def loadSelectedRecording(self):
 		"""Load the currently selected (in GUI) recording"""
-		self.loadRecording(self.source_directory+self.dockWidget.getCurrentRecording())
+		path = os.path.join(self.source_directory, self.dockWidget.getCurrentRecording())
+		self.loadRecording(path)
 	
 	def loadRecording(self, path):
 		"""Load the specified recording"""
@@ -311,7 +312,8 @@ class PlayerPlugin(QObject):
 	def deleteRecording(self, rec):
 		"""Delete specified recording from disk (and unload it, if it's loaded)"""
 		self.unloadRecording()
-		shutil.rmtree(self.source_directory+self.dockWidget.getCurrentRecording())
+		path = os.path.join(self.source_directory, self.dockWidget.getCurrentRecording())
+		shutil.rmtree(path)
 		self.loadRecordingsList()
 	
 	def isRecordingLoaded(self):

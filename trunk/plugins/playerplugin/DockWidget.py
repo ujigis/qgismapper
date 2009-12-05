@@ -57,11 +57,6 @@ class DockWidget(QDockWidget, Ui_DockWidget,  object):
 			
 	def sourcePath_changed(self, text):
 		"""Handle changing source path by the user."""
-		if text=="":
-			return
-		if (text[len(text)-1]!='/') and (text[len(text)-1]!='\\'):
-			text=text+'/'
-			self.sourcePath_edit.setText(text)
 		self.controller.source_directory=str(text)
 		
 	def getCurrentRecording(self):

@@ -72,7 +72,7 @@ class Gatherer(QThread):
 			rv=self.controller.getLastDataSubdirectory(self.controller.output_directory)
 			
 		if rv=="": #if none previous directory found
-			rv=self.controller.output_directory+datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")+"/"
+			rv= os.path.join(self.controller.output_directory, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")) + "/"
 			os.makedirs(rv)
 		
 		return rv
