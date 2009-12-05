@@ -283,7 +283,7 @@ class GatherPlugin(QObject):
 		self.compass_use=False
 		self.compass_device="/dev/ttyUSB0"
 		self.compass_bauds=19200
-		self.output_directory=os.path.expanduser("~/qgis_mapper/gathered_data/")
+		self.output_directory=os.path.expanduser("~/qgismapper/data/")
 		self.output_append=0
 		self.preview_followPosition=True
 		self.preview_scale=25

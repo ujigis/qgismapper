@@ -45,11 +45,6 @@ class DockWidget(QDockWidget, Ui_GatherDockWidget,  object):
 			self.outputPath_edit.setText(rv)
 			
 	def outputPath_changed(self, text):
-		if text=="":
-			return
-		if (text[len(text)-1]!='/') and (text[len(text)-1]!='\\'):
-			text=text+'/'
-			self.outputPath_edit.setText(text)
 		self.controller.output_directory=str(text)
 	
 	def previewFollowPosition_changed(self, state):
