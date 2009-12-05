@@ -266,6 +266,7 @@ bool LadybugRecordingThread::startRecording(QString streamName, LadybugInfo camI
     if (mStream.openForWriting(streamName, camInfo))
     {
       mRecording = TRUE;
+      mFramesDiscarded = 0;
       // let's start the recording thread
       start();
       return true;
