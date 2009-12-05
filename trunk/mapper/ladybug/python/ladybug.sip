@@ -131,8 +131,11 @@ protected:
 class LadybugGpsInfo
 {
 public:
-  LadybugGpsInfo(double lon = 0, double lat = 0, double alt = 0);
-  double lon;
-  double lat;
-  double alt;
+  LadybugGpsInfo(double lon_ = 0, double lat_ = 0, double alt_ = 0, QDateTime time_ = QDateTime());
+
+  bool isValid() const;
+  QByteArray getGPGGA() const;
+
+  double lon,lat,alt;
+  QDateTime time;
 };

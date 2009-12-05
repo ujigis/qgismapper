@@ -29,6 +29,11 @@ unsigned int big2little(unsigned int x)
 	return ntohl(x);
 }
 
+unsigned int little2big(unsigned int x)
+{
+  return htonl(x);
+}
+
 // return offset and size of image in the data frame
 static void jpegOffsetAndSize(unsigned char* data, int cam, int channel, uint& jpgoffset, uint& jpgsize)
 {
@@ -39,21 +44,26 @@ static void jpegOffsetAndSize(unsigned char* data, int cam, int channel, uint& j
 }
 
 LadybugImage::LadybugImage()
- : mData(NULL), mSize(0), mOwnData(false)
+ : mData(NULL), mBufferSize(0), mFrameSize(0), mOwnData(false)
 {
 }
 
 LadybugImage::LadybugImage(unsigned char* data, unsigned int size, bool ownData)
- : mData(data), mSize(size), mOwnData(ownData)
+ : mData(data), mBufferSize(size), mOwnData(ownData)
 {
+  mFrameSize = big2little( *(unsigned int*)(mData+8) );
 }
 
 LadybugImage::LadybugImage(const LadybugImage& other)
 {
-  mSize = other.mSize;
-  mData = new unsigned char[mSize];
+  mBufferSize = other.mBufferSize;
+  mData = new unsigned char[mBufferSize];
   mOwnData = true;
-  memcpy(mData, other.mData, mSize);
+  memcpy(mData, other.mData, mBufferSize);
+
+  mFrameSize = other.mFrameSize;
+
+  mAppendedData = other.mAppendedData;
 }
 
 void LadybugImage::setData(unsigned char* data, unsigned int size, bool ownData)
@@ -62,8 +72,10 @@ void LadybugImage::setData(unsigned char* data, unsigned int size, bool ownData)
     delete [] mData;
 
   mData = data;
-  mSize = size;
+  mBufferSize = size;
   mOwnData = ownData;
+
+  mFrameSize = big2little( *(unsigned int*)(mData+8) );
 }
 
 LadybugImage::~LadybugImage()
@@ -79,7 +91,7 @@ LadybugImage::~LadybugImage()
 bool LadybugImage::isValid() const
 {
   // this is a magic number... we need at least several kilobytes of data!
-  if (mSize < 0x1000)
+  if (mBufferSize < 0x1000)
 		return false;
 
   // check whether this is a correct compressed ladybug frame
@@ -224,7 +236,7 @@ QImage LadybugImage::getColorImage(int cam, bool rotate, int pow_scale)
 
 unsigned int LadybugImage::frameBytes() const
 {
-  return big2little( *(unsigned int*)(mData+8) );
+  return mFrameSize;
 }
 
 unsigned char* LadybugImage::frameData() const
@@ -242,4 +254,38 @@ unsigned int LadybugImage::time() const
 unsigned int LadybugImage::sequenceId() const
 {
   return big2little( *(unsigned int*)(mData+0x20) );
+}
+
+void LadybugImage::setAppendedData(QByteArray data)
+{
+  mAppendedData = data;
+
+  // update internal frame size
+  unsigned int* ptr = (unsigned int*)(mData+8);
+  *ptr = little2big( mFrameSize + mAppendedData.length() );
+}
+
+QByteArray LadybugImage::appendedData() const
+{
+  return mAppendedData;
+}
+
+
+void LadybugImage::addGpsData(QByteArray data)
+{
+  setAppendedData(mAppendedData + data);
+
+  // update frame to tell that we've added GPS data
+  *(unsigned int*)(mData+0x338) = little2big(mFrameSize); // offset
+  *(unsigned int*)(mData+0x33C) = little2big(data.size()); // size
+}
+
+void LadybugImage::addPadding()
+{
+  int frameEnd = ((mFrameSize + mAppendedData.length()) % 512);
+  if (frameEnd > 0)
+  {
+    QByteArray padding(512-frameEnd, '\0');
+    setAppendedData(mAppendedData + padding);
+  }
 }

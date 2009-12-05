@@ -59,6 +59,8 @@ protected:
 
     // counter of discarded frames
     int mFramesDiscarded;
+
+    LadybugGpsInfo mLastGpsInfo;
 };
 
 

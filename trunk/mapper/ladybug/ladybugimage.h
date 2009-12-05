@@ -12,6 +12,8 @@
 
 class QImage;
 
+#include <QByteArray>
+
 class LadybugImage
 {
 public:
@@ -26,7 +28,7 @@ public:
 
   ~LadybugImage();
 
-  //! initialize image with new data (deletes previous data is has ownership)
+  //! initialize image with new data (deletes previous data if has ownership)
   void setData(unsigned char* data, unsigned int size, bool ownData = true);
 
   //! check whether the frame is correct
@@ -56,11 +58,32 @@ public:
   //! sequence id of the frame (counted from 0 when camera is turned on)
   unsigned int sequenceId() const;
 
+  //! return appended data (GPS info, padding bytes) - not included in the frame data
+  //! @note used only during capture from camera
+  QByteArray appendedData() const;
+
+  //! add "appended" data with NMEA sentence(s) from GPS and update the frame
+  void addGpsData(QByteArray data);
+
+  //! add "appended" data so that the overall length (frame + appended data) is aligned to 512 bytes
+  void addPadding();
+
 protected:
 
+  //! set additional data (GPS info, padding bytes) that should be appended to the frame
+  //! @note used only during capture from camera
+  void setAppendedData(QByteArray data);
+
   unsigned char* mData;
-  unsigned int mSize;
+  // size of the allocated buffer
+  unsigned int mBufferSize;
+  // size of the data within the buffer
+  unsigned int mFrameSize;
+
   bool mOwnData;
+
+  //! appended data after capturing the frame - GPS info, padding bytes
+  QByteArray mAppendedData;
 };
 
 #endif

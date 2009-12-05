@@ -338,6 +338,13 @@ void LadybugRecordingThread::writeImage(LadybugImage& img)
   QMutexLocker lock(&mRecordingMutex);
 
   LadybugImage* i2 = new LadybugImage(img);
+
+  // add gps info (if available)
+  if (mLastGpsInfo.isValid())
+    i2->addGpsData(mLastGpsInfo.getGPGGA());
+  // add padding bytes
+  i2->addPadding();
+
   mImageQueue.enqueue(i2);
 
   fprintf(stderr, "in queue: %d\n", mImageQueue.count());
@@ -358,5 +365,9 @@ void LadybugRecordingThread::writeImage(LadybugImage& img)
 void LadybugRecordingThread::setCurrentGpsInfo(LadybugGpsInfo& gpsInfo)
 {
   QMutexLocker lock(&mRecordingMutex);
-  mStream.setCurrentGpsInfo(gpsInfo);
+
+  mLastGpsInfo = gpsInfo;
+
+  // TODO: probably remove
+  //mStream.setCurrentGpsInfo(gpsInfo);
 }
