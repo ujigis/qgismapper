@@ -16,6 +16,12 @@
 
 #include <QRegExp>
 
+#ifndef WIN32
+#include <arpa/inet.h>
+#else
+#include <winsock.h>
+#endif
+
 // index increment is probably fixed also in ladybug SDK
 #define IDX_INCREMENT   50
 
@@ -23,6 +29,55 @@
 #define STREAM_VERSION    4
 
 #define LIMIT_2GB 0x7fffffff
+
+static QString _formatCoord(double coord, int degDigits)
+{
+  int deg = (int) coord;
+  double min = (coord - deg) * 60;
+  QString s = QString("%1%2").arg(deg, degDigits, 10, QChar('0')).arg(min, 6,'f',3, QChar('0'));
+  return s;
+}
+
+QByteArray LadybugGpsInfo::getGPGGA() const
+{
+  //$--GGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,  x,xx,x.x,x.x,M, x.x,M,x.x,xxxx*hh<CR><LF>
+  QString msg;
+  bool valid = (lat != 0 && lon != 0);
+
+  if (valid)
+  {
+    // fill in known values, use dummy values for the rest
+    msg = QString("GPGGA,%1.00,%2,%3,%4,%5,1,06,10.0,%6,M,0.0,M,,")
+          .arg(time.toString("hhmmss"))
+          .arg(_formatCoord(lat,2))
+          .arg(lat > 0 ? "N" : "S")
+          .arg(_formatCoord(lon,3))
+          .arg(lon > 0 ? "E" : "W")
+          .arg(alt, 0, 'f', 1);
+  }
+  else
+  {
+    msg = QString("GPGGA,%1.00,,,,,0,00,,,M,,M,,")
+          .arg(time.toString("hhmmss"));
+  }
+
+  QByteArray b = msg.toAscii();
+
+  // calculate checksum
+  int chksum = 0;
+  for (int i = 0; i < b.length(); i++)
+    chksum ^= b.at(i);
+
+  // add delimiters $ and *
+  b.prepend('$');
+  b.append('*');
+  // append checksum
+  b.append( QString("%1").arg(chksum, 2, 16, QChar('0')).toUpper() );
+
+  return b;
+}
+
+///
 
 LadybugStream::LadybugStream()
 {
@@ -121,18 +176,22 @@ bool LadybugStream::close()
     }
 
     // save gps summary (if there's any)
+    /*
     if (mGpsInfo.count() > 0)
     {
       mFile.seek(16 + 0x98);
       mFile.write((const char*) &endPos, 4);
-      int itemSize = 4+8+8+8;
-      int count = mGpsInfo.count();
+      unsigned int itemSize = 4+8+8+8;
+      unsigned int count = mGpsInfo.count();
       int size = 16+16+4+4+ count*itemSize;
       mFile.write((const char*) &size, 4);
       // append a block
       mFile.seek(endPos);
       mFile.write("GPSSUMMARY_00001", 16);
       mFile.write("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16);
+      // convert item size and count to big endian
+      itemSize = htonl(itemSize);
+      count = htonl(count);
       mFile.write((const char*) &itemSize, 4);
       mFile.write((const char*) &count, 4);
       foreach (int frame, mGpsInfo.keys())
@@ -143,12 +202,14 @@ bool LadybugStream::close()
         mFile.write((const char*) &gpsInfo.lat, 8);
         mFile.write((const char*) &gpsInfo.alt, 8);
       }
-    }
+    }*/
   }
 	
 	mFile.close();
 
   mGpsInfo.clear();
+
+  mCameraInfo = LadybugInfo();
 
   return true;
 }
@@ -196,15 +257,10 @@ bool LadybugStream::writeImage(const LadybugImage& image)
 	
   mFile.write((const char*) image.frameData(), image.frameBytes());
 
-  // align every frame to 512 bytes - ladybug SDK does it too...
-  /*
-  // TODO: we have to alter image size in data
-  int bytesLeft = (image.frameBytes() % 512);
-  if (bytesLeft > 0)
-  {
-    mFile.write(QByteArray(512-bytesLeft, '\0'));
-  }
-  */
+  // appended data may contain GPS info and padding
+  // the size inside the frame has been already modified...
+  mFile.write( image.appendedData() );
+
 
   // make sure the writes get to disk and not only to caches!
   if (mNumFrames % 16 == 15)
@@ -360,24 +416,39 @@ bool LadybugStream::openForReadingInternal(int fileIndex, int firstFrame)
     mOffsets[511-i] = tmpOffset;
   }
 
+  // load calibration (for the first time)
+  if (!mCameraInfo.isValid())
+  {
+    mCameraInfo.calibration = mFile.read(header.ulConfigrationDataSize);
+    mCameraInfo.serialBase = header.serialBase;
+    mCameraInfo.serialHead = header.serialHead;
+  }
+
   // try to read gps data
+  /*
   if (header.ulGPSDataSize != 0)
   {
+    printf("gps summary present! %u\n", header.ulGPSDataSize);
     mFile.seek(header.ulGPSDataOffset);
     if (mFile.read(16) == QByteArray("GPSSUMMARY_00001"))
     {
       mFile.read(16); // reserved - zeros
-      int itemSize = 0;
+      unsigned int itemSize = 0;
       mFile.read((char*)&itemSize, 4);
-      if (itemSize == 28)
+      itemSize = ntohl(itemSize);  // item size is in big endian!
+      printf("item size: %d\n", itemSize);
+      if (itemSize == 28 || itemSize == 32)
       {
-        int count = 0;
+        unsigned int count = 0;
         mFile.read((char*)&count, 4);
-        for (int i = 0; i < count; i++)
+        count = ntohl(count);  // count is in big endian too!
+        for (unsigned int i = 0; i < count; i++)
         {
           int frame = 0;
           double lon,lat,alt;
           mFile.read((char*)&frame, 4);
+          if (itemSize == 32)
+            mFile.read(4); // unknown 4 bytes
           mFile.read((char*)&lon, 8);
           mFile.read((char*)&lat, 8);
           mFile.read((char*)&alt, 8);
@@ -388,7 +459,7 @@ bool LadybugStream::openForReadingInternal(int fileIndex, int firstFrame)
     }
     else
       printf("gps summary fingerprint not recognized\n");
-  }
+  }*/
 
   // go to the position of first image
   mFile.seek(mDataOffset);
@@ -623,4 +694,9 @@ void LadybugStream::setCurrentGpsInfo(LadybugGpsInfo& gpsInfo)
   int frame = (mFile.isOpen() ? mNumFrames : 0);
   mGpsInfo[frame] = gpsInfo;
   printf("(-: set gpsinfo for frame %d\n", frame);
+}
+
+const LadybugInfo& LadybugStream::cameraInfo() const
+{
+  return mCameraInfo;
 }

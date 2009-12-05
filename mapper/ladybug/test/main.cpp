@@ -54,6 +54,35 @@ int testPlayer(int argc, char* argv[])
   return a.exec();
 }
 
+int testGps(int atgc, char* argv[])
+{
+  // a test of writing gps data info stream file
+
+  // open existing stream and read a frame
+  LadybugImage img;
+  LadybugStream stream;
+  bool res = stream.openForReading(argv[2]);
+  printf("open: %d\n", res);
+  if (!res)
+    return 2;
+  LadybugInfo cameraInfo = stream.cameraInfo();
+  stream.readNextFrame(img);
+  stream.close();
+
+  // add gps info
+  LadybugGpsInfo info(18.5, 48.6666, 123.4, QDateTime::currentDateTime());
+  img.addGpsData(info.getGPGGA());
+  img.addPadding();
+
+  // write a new stream with gps info
+  LadybugStream streamWrite;
+  streamWrite.openForWriting("out", cameraInfo);
+  streamWrite.writeImage(img);
+  streamWrite.close();
+
+  return 0;
+}
+
 int main(int argc, char* argv[])
 {
   if (argc < 3)
@@ -66,6 +95,8 @@ int main(int argc, char* argv[])
     return testCapture(argc, argv);
   else if (argv[1][0] == 'p')
     return testPlayer(argc, argv);
+  else if (argv[1][0] == 'g')
+    return testGps(argc, argv);
   else
   {
     fprintf(stderr, "Unknown command.\n");

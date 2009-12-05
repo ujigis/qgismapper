@@ -185,7 +185,8 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 
 		np=self.controller.getNmeaParser()
 		if np.validPos:
-			self.cam.setCurrentGpsInfo( LadybugGpsInfo(np.lon, np.lat, np.altitude) )
+			gpsTime = QDateTime.fromString(np.time, "yyyy-MM-dd hh:mm:ss")
+			self.cam.setCurrentGpsInfo( LadybugGpsInfo(np.lon, np.lat, np.altitude, gpsTime) )
 
 
 	# CONFIGURATION LOAD/SAVE

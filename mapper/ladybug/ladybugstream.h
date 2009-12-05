@@ -12,6 +12,7 @@
 
 #include <QFile>
 #include <QMap>
+#include <QDateTime>
 
 typedef unsigned int uint32;
 
@@ -22,17 +23,31 @@ class LadybugImage;
 class LadybugInfo
 {
 public:
+    LadybugInfo() : calibration(), serialBase(0), serialHead(0) {}
+    bool isValid() { return serialBase != 0 && calibration.length() != 0; }
+
     QByteArray calibration;
     uint32 serialBase;
     uint32 serialHead;
 };
 
-//
+/**
+ Class that contains information about GPS status.
+
+ Ladybug SDK seems not to use the GPS summary at the end of the file.
+ Instead it's necessary to add recent NMEA sentences at the end of each image frame.
+ */
 class LadybugGpsInfo
 {
 public:
-  LadybugGpsInfo(double lon_ = 0, double lat_ = 0, double alt_ = 0) : lon(lon_), lat(lat_), alt(alt_) {}
+  LadybugGpsInfo(double lon_ = 0, double lat_ = 0, double alt_ = 0, QDateTime time_ = QDateTime())
+    : lon(lon_), lat(lat_), alt(alt_), time(time_) {}
+
+  bool isValid() const { return lon != 0 || lat != 0 || alt != 0; }
+  QByteArray getGPGGA() const;
+
   double lon,lat,alt;
+  QDateTime time;
 };
 
 
@@ -74,6 +89,8 @@ public:
 
   void setCurrentGpsInfo(LadybugGpsInfo& gpsInfo);
 
+  const LadybugInfo& cameraInfo() const;
+
 protected:
   static QString pgrFilename(QString baseName, int index);
 
@@ -96,7 +113,7 @@ protected:
 	QFile mFile;
   Mode mMode;
 
-  LadybugInfo mCameraInfo; // w
+  LadybugInfo mCameraInfo; // r+w
   double mNumMegabytes; // w
 
   //! number of frames in this stream file
