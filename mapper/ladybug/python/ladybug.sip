@@ -136,6 +136,8 @@ public:
   bool isValid() const;
   QByteArray getGPGGA() const;
 
-  double lon,lat,alt;
+  double lon;
+  double lat;
+  double alt;
   QDateTime time;
 };
