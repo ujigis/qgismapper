@@ -77,6 +77,7 @@ int testGps(int atgc, char* argv[])
   // write a new stream with gps info
   LadybugStream streamWrite;
   streamWrite.openForWriting("out", cameraInfo);
+  streamWrite.setCurrentGpsInfo(info);
   streamWrite.writeImage(img);
   streamWrite.close();
 
