@@ -199,8 +199,9 @@ bool LadybugStream::close()
         const LadybugGpsInfo& gpsInfo = mGpsInfo.value(frame);
         mFile.write((const char*) &frame, 4);
         mFile.write(QByteArray(4, '\0')); // four bytes padding
-        mFile.write((const char*) &gpsInfo.lon, 8);
+        // lat,lon order in documentation seems to be reversed
         mFile.write((const char*) &gpsInfo.lat, 8);
+        mFile.write((const char*) &gpsInfo.lon, 8);
         mFile.write((const char*) &gpsInfo.alt, 8);
       }
     }
@@ -454,8 +455,9 @@ bool LadybugStream::openForReadingInternal(int fileIndex, int firstFrame)
           mFile.read((char*)&frame, 4);
           if (itemSize == 32)
             mFile.read(4); // unknown 4 bytes
-          mFile.read((char*)&lon, 8);
+          // lat,lon order in documentation seems to be reversed
           mFile.read((char*)&lat, 8);
+          mFile.read((char*)&lon, 8);
           mFile.read((char*)&alt, 8);
           mGpsInfo.insert(frame, LadybugGpsInfo(lon,lat,alt));
           printf("gps: %d | LON %.5f | LAT %.5f | ALT %.1f\n", frame, lon, lat, alt);
