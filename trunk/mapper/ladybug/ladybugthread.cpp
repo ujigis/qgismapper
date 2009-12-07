@@ -369,6 +369,6 @@ void LadybugRecordingThread::setCurrentGpsInfo(LadybugGpsInfo& gpsInfo)
 
   mLastGpsInfo = gpsInfo;
 
-  // TODO: probably remove
-  //mStream.setCurrentGpsInfo(gpsInfo);
+  // inform stream - for GPS summary
+  mStream.setCurrentGpsInfo(gpsInfo);
 }

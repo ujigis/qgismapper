@@ -176,12 +176,12 @@ bool LadybugStream::close()
     }
 
     // save gps summary (if there's any)
-    /*
+    // this summary is used by Ladybug SDK for HTML/KML export
     if (mGpsInfo.count() > 0)
     {
       mFile.seek(16 + 0x98);
       mFile.write((const char*) &endPos, 4);
-      unsigned int itemSize = 4+8+8+8;
+      unsigned int itemSize = 4+4+8+8+8; // frame (4), padding (4), lon (8), lat (8), alt (8)
       unsigned int count = mGpsInfo.count();
       int size = 16+16+4+4+ count*itemSize;
       mFile.write((const char*) &size, 4);
@@ -198,11 +198,12 @@ bool LadybugStream::close()
       {
         const LadybugGpsInfo& gpsInfo = mGpsInfo.value(frame);
         mFile.write((const char*) &frame, 4);
+        mFile.write(QByteArray(4, '\0')); // four bytes padding
         mFile.write((const char*) &gpsInfo.lon, 8);
         mFile.write((const char*) &gpsInfo.lat, 8);
         mFile.write((const char*) &gpsInfo.alt, 8);
       }
-    }*/
+    }
   }
 	
 	mFile.close();
@@ -265,6 +266,10 @@ bool LadybugStream::writeImage(const LadybugImage& image)
   // make sure the writes get to disk and not only to caches!
   if (mNumFrames % 16 == 15)
     sync();
+
+  // generate a record for GPS summary (if there's any gps input)
+  if (mNumFrames % 50 == 0 && mLastGpsInfo.isValid())
+    mGpsInfo.insert(mNumFrames, mLastGpsInfo);
 
 	mNumFrames++;
   mTotalNumFrames++;
@@ -691,9 +696,7 @@ uint LadybugStream::frameTime(int frameId)
 
 void LadybugStream::setCurrentGpsInfo(LadybugGpsInfo& gpsInfo)
 {
-  int frame = (mFile.isOpen() ? mNumFrames : 0);
-  mGpsInfo[frame] = gpsInfo;
-  printf("(-: set gpsinfo for frame %d\n", frame);
+  mLastGpsInfo = gpsInfo;
 }
 
 const LadybugInfo& LadybugStream::cameraInfo() const

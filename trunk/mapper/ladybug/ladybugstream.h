@@ -133,8 +133,11 @@ protected:
   QList<int> mFirstFrameList;
   int mFirstFrame;
 
-  // maps image number to gps info (not all images have gps info)
+  //! GPS summary - written for every 50-th frame
   QMap<int, LadybugGpsInfo> mGpsInfo;
+
+  //! last GPS position information
+  LadybugGpsInfo mLastGpsInfo;
 };
 
 #endif
