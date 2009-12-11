@@ -306,7 +306,10 @@ void LadybugWidget::seekToFrame(int frameId)
   }
   else
   {
-    mThread->seekToFrame(frameId);
+    //mThread->seekToFrame(frameId);
+    pause();
+    updateVideo(getSingleFrame(frameId));
+    pause();
   }
   update();
 }
@@ -323,7 +326,10 @@ void LadybugWidget::seekToTime(uint msecs)
   }
   else
   {
-    mThread->seekToFrame(frameId);
+    //mThread->seekToFrame(frameId);
+    pause();
+    updateVideo(getSingleFrame(frameId));
+    pause();
   }
   update();
 }
