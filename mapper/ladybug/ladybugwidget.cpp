@@ -170,7 +170,9 @@ void LadybugWidget::stopPlayerThread()
 
 bool LadybugWidget::closeStream()
 {
-  stopPlayerThread();
+  // make sure the thread gets terminated and update timer stopped
+  if (!mPaused)
+    pause();
 
   mHasImage = false;
   update();
