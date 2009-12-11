@@ -5,6 +5,7 @@ import os, datetime
 from qgismapper import PluginAudioWorker
 from PluginAudio_ui import Ui_PluginAudio
 
+
 class PluginAudio(QWidget, Ui_PluginAudio):
 	def __init__(self, controller, parent=None):
 		QWidget.__init__(self, parent)
@@ -21,8 +22,17 @@ class PluginAudio(QWidget, Ui_PluginAudio):
 		)
 		
 		PluginAudioWorker.initializeAudio()
-		self.audioStatusTimer=self.startTimer(200)
 	
+		# populate the input devices combo
+		settings = QSettings()
+		defaultDeviceIndex = settings.value("/plugins/GatherPlugin/Audio/inputDevice", PluginAudioWorker.defaultDeviceIndex()).toInt()[0]
+		for device in PluginAudioWorker.devices():
+			if device.isInput:
+				self.cboInputDevice.addItem( "[%s] %s" % (device.api, device.name), QVariant(device.index))
+			if device.index == defaultDeviceIndex:
+				self.cboInputDevice.setCurrentIndex( self.cboInputDevice.count()-1 ) # use last added device
+
+
 	def finalizeUI(self):
 		self.enabledCheckBox=self.controller.getRecordingEnabledAuxCheckbox(self.name)
 		
@@ -30,11 +40,18 @@ class PluginAudio(QWidget, Ui_PluginAudio):
 			self.enabledCheckBox, SIGNAL("stateChanged(int)"),
 			self.recordingEnabledDisabledExternal
 		)
+
 		self.recordingEnabledDisabled()
+		self.audioStatusTimer=self.startTimer(100)
 	
 	def unload(self):
 		self.killTimer(self.audioStatusTimer)
 		
+		if self.cboInputDevice.currentIndex() >= 0:
+			settings = QSettings()
+			device = self.cboInputDevice.itemData(self.cboInputDevice.currentIndex()).toInt()[0]
+			settings.setValue("/plugins/GatherPlugin/Audio/inputDevice", device)
+
 		PluginAudioWorker.stopAudio()
 		PluginAudioWorker.uninitializeAudio()
 		
@@ -79,13 +96,27 @@ class PluginAudio(QWidget, Ui_PluginAudio):
 		self.setEnabled(True)
 		
 	def recordingEnabledDisabled(self):
+
+		hasDevices = (self.cboInputDevice.count() != 0)
+		if not hasDevices:
+			self.recordingEnabled_button.setChecked(False)
+			self.recordingEnabled_button.setEnabled(False)
+			
 		if self.recordingEnabled_button.isChecked():
+			p = QPixmap(":/icons/dialog-ok-apply.png")
 			self.recordingEnabled_button.setText(self.tr("Recording enabled (click to disable)"))
-			PluginAudioWorker.startAudio()
+			device = self.cboInputDevice.itemData(self.cboInputDevice.currentIndex()).toInt()[0]
+			PluginAudioWorker.startAudio(device)
+			self.cboInputDevice.setEnabled(False)
 		else:
-			self.recordingEnabled_button.setText(self.tr("Recording disabled (click to enable)"))
+			p = QPixmap(":/icons/dialog-cancel.png")
+			self.recordingEnabled_button.setText(self.tr("Recording disabled (click to enable)") if hasDevices else self.tr("No input devices available"))
 			PluginAudioWorker.stopAudio()
+			self.cboInputDevice.setEnabled(True)
 		
+		self.recordingEnabled_button.setIconSize(p.size())
+		self.recordingEnabled_button.setIcon(QIcon(p))
+
 		if self.enabledCheckBox!=None:
 			self.enabledCheckBox.setCheckState(
 				[Qt.Unchecked, Qt.Checked][int(self.recordingEnabled_button.isChecked())]
