@@ -1,3 +1,7 @@
+
+#include <QList>
+#include <QString>
+
 /**
  * Initialize audio stuff (load libraries etc.)
 **/
@@ -10,8 +14,10 @@ bool uninitializeAudio();
 
 /**
  * Start audio processing (this makes getRecordedAudioPeak() working).
+ *
+ * Use specified input device. When -1 is passed, it will use default device.
 **/
-bool startAudio();
+bool startAudio(int inputDevice = -1);
 
 /**
  * Stop audio processing.
@@ -24,7 +30,7 @@ void stopAudio();
 bool startRecording(const char *outputFile);
 
 /**
- * Stop ongoing recording/
+ * Stop ongoing recording.
 **/
 void stopRecording();
 
@@ -33,3 +39,26 @@ void stopRecording();
  * The returned value is scaled to 0-1.
 **/
 float getCapturedAudioPeak();
+
+/**
+ * Audio device information structure
+ */
+class AudioDevice
+{
+public:
+  int index;
+  QString name;
+  QString api;
+  bool isInput;
+  bool isOutput;
+};
+
+/**
+ * Get List of available devices. Returns valid results after initializeAudio() has been called.
+ */
+QList<AudioDevice> devices();
+
+/**
+ * Find out index of the default input device
+ */
+int defaultDeviceIndex();
