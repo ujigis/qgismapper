@@ -7,7 +7,9 @@
 #include <assert.h>
 #include <vorbis/vorbisenc.h>
 
+#include "PluginAudioWorker.h"
 #include "PluginAudioWorker_SamplesBuffer.c"
+
 
 enum {
 	RecordingNoOfChannels=2,
@@ -79,10 +81,37 @@ bool uninitializeAudio()
 }
 
 
+////////////////////////////////////////////////////////////
+//////////// AUDIO BACKEND INFO
+////////////////////////////////////////////////////////////
 
 
+QList<AudioDevice> devices()
+{
+  QList<AudioDevice> lst;
+  int numDevices = Pa_GetDeviceCount();
+  if( numDevices < 0 )
+    return lst;
 
+  for( int i = 0; i<numDevices; i++ )
+  {
+    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo( i );
+    AudioDevice d;
+    d.index = i;
+    d.name = QString::fromLatin1(deviceInfo->name);
+    d.api = QString::fromLatin1(Pa_GetHostApiInfo(deviceInfo->hostApi)->name);
+    d.isInput = (deviceInfo->maxInputChannels > 0);
+    d.isOutput = (deviceInfo->maxOutputChannels > 0);
+    lst.append(d);
+  }
 
+  return lst;
+}
+
+int defaultDeviceIndex()
+{
+  return Pa_GetDefaultInputDevice();
+}
 
 
 ////////////////////////////////////////////////////////////
@@ -119,60 +148,43 @@ static int paCallback(
 	}
 	if ((maxVal/32678.f)>audioPeakValue)
 		audioPeakValue=maxVal/32678.f;
-	
 	return paContinue;
 }
 
 
 
-bool startAudio()
+bool startAudio(int inputDevice /* = -1 */)
 {
-#ifdef ENFORCE_ALSA_AND_DS
 	PaStreamParameters inStreamSpec;
-	inStreamSpec.device=Pa_GetDefaultInputDevice();
+  inStreamSpec.device = (inputDevice >= 0 ? inputDevice : Pa_GetDefaultInputDevice());
 
-	int i;
-	for (i=0; i<Pa_GetDeviceCount(); i++) {
-		if ((Pa_GetDeviceInfo(i)->hostApi==paALSA) || (Pa_GetDeviceInfo(i)->hostApi==paDirectSound)) {
-			inStreamSpec.device=Pa_GetHostApiInfo(Pa_GetDeviceInfo(i)->hostApi)->defaultInputDevice;
-			break;
-		}
-	}
-	
+  const PaDeviceInfo* info = Pa_GetDeviceInfo(inStreamSpec.device);
+
+  // set parameters
 	inStreamSpec.channelCount=RecordingNoOfChannels;
 	inStreamSpec.sampleFormat=paInt16;
-	inStreamSpec.suggestedLatency=0.5;
+  // use high input latency... when setting low input latency the recording tends to hang
+  // after few seconds (no idea what's the reason)
+  inStreamSpec.suggestedLatency=info->defaultHighInputLatency;
 	inStreamSpec.hostApiSpecificStreamInfo=NULL;
 
 	PaError err=Pa_OpenStream(
 		&audioStream,
-		NULL,
 		&inStreamSpec,
-		DefaultSampleRate,
+    NULL,
+    DefaultSampleRate,
 		paFramesPerBufferUnspecified,
 		paNoFlag,
 		paCallback,
 		0
 	);
-#else
-	PaError err=Pa_OpenDefaultStream(
-		&audioStream,
-		RecordingNoOfChannels,
-		0,
-		paInt16,
-		DefaultSampleRate,
-		0,
-		paCallback,
-		0
-	);
-#endif
 
 	if (err!=paNoError) {
 		printf("error opening stream!\n");
 		return false;
 	}
 
-	Pa_StartStream(audioStream);
+  Pa_StartStream(audioStream);
 
 	return true;
 }
