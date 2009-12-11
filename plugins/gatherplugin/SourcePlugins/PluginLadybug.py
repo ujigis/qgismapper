@@ -96,9 +96,14 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 	def recordingEnabledDisabled(self):
 		
 		if self.btnEnableRecording.isChecked():
+			p = QPixmap(":/icons/dialog-ok-apply.png")
 			self.btnEnableRecording.setText("Recording enabled (click to disable)")
 		else:
+			p = QPixmap(":/icons/dialog-cancel.png")
 			self.btnEnableRecording.setText("Recording disabled (click to enable)")
+
+		self.btnEnableRecording.setIconSize(p.size())
+		self.btnEnableRecording.setIcon(QIcon(p))
 		
 		  
 	def capturedFrame(self, f):

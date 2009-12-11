@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>352</width>
+    <width>365</width>
     <height>480</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>348</width>
+    <width>365</width>
     <height>480</height>
    </size>
   </property>
@@ -31,6 +31,16 @@
       </property>
       <property name="text">
        <string>Start recording</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>:/icons/media-record.png</normaloff>:/icons/media-record.png</iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>22</width>
+        <height>22</height>
+       </size>
       </property>
       <property name="checkable">
        <bool>true</bool>

@@ -32,7 +32,7 @@ class DockWidget(QDockWidget, Ui_GatherDockWidget,  object):
 		QObject.connect(self.previewKeepPaths_checkBox,  SIGNAL("stateChanged(int)"), self.previewKeepPaths_changed)
 		
 		QObject.connect(self.simple_pushButton, SIGNAL("clicked()"), lambda :self.controller.showInterface(simple=True))
-		
+
 		self.diskFreeSpaceTimer=self.startTimer(1000)
 		
 	def unload(self):
@@ -72,18 +72,23 @@ class DockWidget(QDockWidget, Ui_GatherDockWidget,  object):
 	def set_recording(self,  val):
 		""" Update widget UI according to whether recording is on or off """
 		if val==True:
+			p = QPixmap(":/icons/media-playback-stop.png")
 			self.startRecording_button.setText(self.tr("Recording.... (click to stop)"))
 			self.startRecording_button.setChecked(True)
 			#self.dataInputPlugins_tabWidget.setEnabled(0)
 			self.output_groupBox.setEnabled(0)
 			self.settings_button.setEnabled(0)
 		else:
+			p = QPixmap(":/icons/media-record.png")
 			self.startRecording_button.setText(self.tr("Start recording"))
 			self.startRecording_button.setChecked(False)
 			self.startRecording_button.setChecked(False)
 			#self.dataInputPlugins_tabWidget.setEnabled(1)
 			self.output_groupBox.setEnabled(1)
 			self.settings_button.setEnabled(1)
+
+		self.startRecording_button.setIconSize(p.size())
+		self.startRecording_button.setIcon(QIcon(p))
 	
 	def timerEvent(self, event):
 		spaceStr=""

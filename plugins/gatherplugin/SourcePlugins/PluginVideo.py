@@ -281,10 +281,15 @@ class PluginVideo(QWidget, Ui_PluginVideo):
 
 	def recordingEnabledDisabled(self):
 		if self.recordingEnabled_button.isChecked():
+			p = QPixmap(":/icons/dialog-ok-apply.png")
 			self.recordingEnabled_button.setText(self.tr("Recording enabled (click to disable)"))
 		else:
+			p = QPixmap(":/icons/dialog-cancel.png")
 			self.recordingEnabled_button.setText(self.tr("Recording disabled (click to enable)"))
 		
+		self.recordingEnabled_button.setIconSize(p.size())
+		self.recordingEnabled_button.setIcon(QIcon(p))
+
 		if self.enabledCheckBox!=None:
 			self.enabledCheckBox.setCheckState(
 				[Qt.Unchecked, Qt.Checked][int(self.recordingEnabled_button.isChecked())]
