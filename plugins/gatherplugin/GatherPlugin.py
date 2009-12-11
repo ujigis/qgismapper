@@ -292,6 +292,20 @@ class GatherPlugin(QObject):
 	
 	def recordingStart(self):
 		""" Start new recording (only call if there isn't any). """
+
+		# check that we have gps input
+		if not self.isGpsConnected():
+			QMessageBox.warning(self.dockWidget, self.tr("Warning"), self.tr("GPS device isn't connected!\n\nPlease configure GPS input."))
+			self.dockWidget.recording = False
+			return
+		# check we have position
+		if self.getNmeaParser().fix == "none":
+			if QMessageBox.warning(self.dockWidget, self.tr("Warning"),
+					    self.tr("GPS doesn't have a valid position.\n\nDo you really want to start recording?"),
+					    QMessageBox.Yes|QMessageBox.No) != QMessageBox.Yes:
+				self.dockWidget.recording = False
+				return
+
 		self.recordingStartPathPreview()
 		if not self.recordingStartGatherer():
 			self.recordingStop()
