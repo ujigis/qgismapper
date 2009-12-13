@@ -31,7 +31,8 @@ typedef struct RecordingParams {
 
 
 
-pthread_t recordingThread=0;
+pthread_t recordingThread;
+bool hasRecordingThread=false;
 pthread_mutex_t threadRunMutex=PTHREAD_MUTEX_INITIALIZER;
 volatile int threadRunStop;
 
@@ -270,7 +271,10 @@ static void *recordingThreadFct(void *data)
 		} else {
 			//not much in the buffer, wait for a while to get new data
 			sb_unlock(recBuffer);
+#ifndef _WIN32
+			// windows doesn't have microseconds sleep function?
 			usleep(400);
+#endif
 		}
 		
 		pthread_mutex_lock(&threadRunMutex);
@@ -300,13 +304,14 @@ static void *recordingThreadFct(void *data)
 	free(rp);
 
 	pthread_exit(NULL);
+	return 0; // returns something
 }
 
 
 
 bool startRecording(const char *outputFile)
 {
-	assert(recordingThread==0);
+	assert(hasRecordingThread==0);
 
 	//initialize output file
 	RecordingParams *rp=(RecordingParams*)malloc(sizeof(RecordingParams));
@@ -347,21 +352,21 @@ bool startRecording(const char *outputFile)
 	
 	threadRunStop=0;
 	pthread_create(&recordingThread, NULL, recordingThreadFct, rp);
+	hasRecordingThread=true;
 
 	return true;
 }
 
 void stopRecording()
 {
-	assert(recordingThread!=0);
+	assert(hasRecordingThread!=0);
 
 	pthread_mutex_lock(&threadRunMutex);
 	threadRunStop=1;
 	pthread_mutex_unlock(&threadRunMutex);
 
 	pthread_join(recordingThread, NULL);
-
-	recordingThread=0;
+	hasRecordingThread=false;
 }
 
 float getCapturedAudioPeak()

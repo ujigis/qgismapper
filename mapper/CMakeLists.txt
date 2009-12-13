@@ -13,6 +13,12 @@ SET(WITH_LADYBUG FALSE CACHE BOOL "Compile support for Ladybug2 camera")
 
 
 IF (WITH_AUDIO)
+  IF (WIN32)
+    FIND_PACKAGE(Pthread REQUIRED)
+    IF (NOT PTHREAD_FOUND)
+      MESSAGE(FATAL_ERROR "Pthreads for win32 is missing! (for audio)")
+    ENDIF ()
+  ENDIF ()
   FIND_PACKAGE(Portaudio REQUIRED)
   IF (NOT PORTAUDIO_FOUND)
     MESSAGE(FATAL_ERROR "PortAudio is missing! (for audio)")

@@ -3,6 +3,9 @@
  * A simple C implementation of a thread-safe sample buffer.
 **/
 
+#ifdef _WIN32
+typedef __int16 int16_t;
+#endif
 
 enum {
 	SamplesBuffer_InitialSize=8192,
