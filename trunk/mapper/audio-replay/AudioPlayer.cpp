@@ -7,6 +7,10 @@
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
 
+#ifdef _WIN32
+typedef __int16 int16_t;
+#endif
+
 #include "../audio-capture/PluginAudioWorker_SamplesBuffer.c"
 #include "AudioPlayer.h"
 
@@ -32,7 +36,8 @@ PaStream* paStream=0;
 SamplesBuffer *samplesBuffer;
 
 pthread_spinlock_t decodingThread_lock;
-pthread_t decodingThread=0;
+pthread_t decodingThread;
+bool hasDecodingThread=false;
 volatile int decodingThread_stop;
 
 OggReplayCallback *replayCallbackClass;
@@ -65,7 +70,7 @@ static int paCallback(
 {
 	//fill the sound card output buffer with data in samples buffer from ogg decoder
 	pthread_spin_lock(&decodingThread_lock);
-	if (sb_samplesCount(samplesBuffer)==0 && !decodingThread) {
+	if (sb_samplesCount(samplesBuffer)==0 && !hasDecodingThread) {
 		sb_padWithZeros((int16_t*)outputBuffer, 0, framesPerBuffer*oggChannels-1);
 		pthread_spin_unlock(&decodingThread_lock);
 		return paContinue;
@@ -179,7 +184,7 @@ void ogg_closeFile()
 
 
 	pthread_spin_lock(&decodingThread_lock);
-	if (decodingThread==0) {
+	if (hasDecodingThread==0) {
 		pthread_spin_unlock(&decodingThread_lock);
 		return;
 	}
@@ -240,7 +245,10 @@ static void *decodingThreadFct(void *data)
 
 			sb_appendData(samplesBuffer, (const int16_t*)buffer, oggDecodedCount*oggChannels);
 		} else {
+#ifndef _WIN32
+			// sleeping in microseconds not available on win?
 			usleep(SamplesBufferMaxDuration/4);
+#endif
 		}
 
 		pthread_spin_lock(&decodingThread_lock);
@@ -256,14 +264,16 @@ static void *decodingThreadFct(void *data)
 	pthread_spin_unlock(&ogg_lock);
 
 	pthread_spin_lock(&decodingThread_lock);
-	decodingThread=0;
+	hasDecodingThread=false;
 	pthread_spin_unlock(&decodingThread_lock);
 
 	pthread_exit(NULL);
+	return 0; // we must return something
 }
 
 void ogg_startDecoding()
 {
 	decodingThread_stop=0;
 	pthread_create(&decodingThread, NULL, decodingThreadFct, 0);
+	hasDecodingThread=true;
 }
