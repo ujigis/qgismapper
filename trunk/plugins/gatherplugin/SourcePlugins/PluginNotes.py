@@ -72,11 +72,6 @@ class PluginNotes(QWidget, Ui_PluginNotes):
 	def finalizeUI(self):
 		pass
 		
-	def loadConfig(self, rootElement):
-		pass
-	def saveConfig(self, rootElement):
-		pass
-	
 	def startRecording(self, dataDirectory):
 		self.dataDirectory=dataDirectory+self.name+"/"
 		if not os.path.isdir(self.dataDirectory):

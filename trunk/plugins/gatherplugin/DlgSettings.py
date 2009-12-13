@@ -15,12 +15,12 @@ class DlgSettings(QDialog, Ui_DlgSettings):
 		QDialog.__init__(self, parent)
 		self.setupUi(self)
 		
-		if parent.controller.gps_source==parent.controller.gps_source_ENUM.GPSD and not gpsModuleAvailable:
-			parent.controller.gps_source=parent.controller.gps_source_ENUM.SERIAL
+		if parent.controller.gps_source == "gpsd" and not gpsModuleAvailable:
+			parent.controller.gps_source = "serial"
 		
-		if parent.controller.gps_source==parent.controller.gps_source_ENUM.SERIAL:
+		if parent.controller.gps_source == "serial":
 			self.serial_radio.setChecked(1)
-		elif parent.controller.gps_source==parent.controller.gps_source_ENUM.FILE:
+		elif parent.controller.gps_source == "file":
 			self.file_radio.setChecked(1)
 		else:
 			self.gpsd_radio.setChecked(1)
@@ -74,11 +74,11 @@ class DlgSettings(QDialog, Ui_DlgSettings):
 		controller = self.parentDlg.controller
 	    
 		if self.serial_radio.isChecked():
-			controller.gps_source=controller.gps_source_ENUM.SERIAL
+			controller.gps_source = "serial"
 		elif self.file_radio.isChecked():
-			controller.gps_source=controller.gps_source_ENUM.FILE
+			controller.gps_source = "file"
 		else:
-			controller.gps_source=controller.gps_source_ENUM.GPSD
+			controller.gps_source = "gpsd"
 		controller.gps_serial=str(self.serial_path.text())
 		controller.gps_serialBauds=int(self.serial_bauds.currentText())
 		controller.gps_file=str(self.file_path.text())

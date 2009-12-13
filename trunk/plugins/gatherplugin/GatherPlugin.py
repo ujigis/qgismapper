@@ -9,7 +9,6 @@ from DockWidget import DockWidget
 from DockWidget_simple import DockWidget_simple
 import SourcePlugins
 import sys, os, re
-from Enumerate import *
 import Gatherer
 import traceback
 from CanvasMarkers import PositionMarker
@@ -17,19 +16,8 @@ import logging, logging.handlers
 
 from GpsDaemon import GpsDaemon
 
-#path to plugin's configuration file
-configFilePath=os.path.expanduser("~/.qgis/QGisMapper_GatherPlugin.xml")
 logFilePath=os.path.expanduser("~/.qgis/GatherPlugin.log")
 
-def parseBool(str):
-	return {"True":True, "False":False}[str]
-
-def QXmlGetNodeStr(node):
-	"""Returns QXml node's text contents"""
-	return str(node.firstChild().toText().data()).strip()
-def QXmlGetAttr(node, attr):
-	"""Returns QXml node's attribute value"""
-	return str(node.attributes().namedItem(attr).toAttr().value())
 
 class GatherPlugin(QObject):
 	"""
@@ -119,160 +107,70 @@ class GatherPlugin(QObject):
 		SourcePlugins.loadPlugins(self)
 	
 	def loadConfiguration(self):
-		""" Load configuration from a config file """
-		self.loadDefaults()
-		if os.path.isfile(configFilePath):
-			dom1=QDomDocument()
-			dom1.setContent(open(configFilePath).read())
-			node = dom1.documentElement()
-			
-			try:
-				e_iface=node.elementsByTagName("interface").item(0)
-				self.interface_simple=parseBool(QXmlGetAttr(e_iface, "simple"))
-			except:
-				pass #traceback.print_exc(file=sys.stdout)
-			
-			try:
-				e_output=node.elementsByTagName("output").item(0)
-				self.output_directory=QXmlGetNodeStr(e_output)
-				self.output_append=int(QXmlGetAttr(e_output, "append"))
-			except:
-				pass #traceback.print_exc(file=sys.stdout)
-				
-			try:
-				e_preview=node.elementsByTagName("preview").item(0).toElement()
-				self.preview_followPosition=parseBool(QXmlGetAttr(e_preview, "followPosition"))
-				self.preview_scale=int(QXmlGetAttr(e_preview, "scale"))
-				self.preview_keepPaths=parseBool(QXmlGetAttr(e_preview, "keepPaths"))
-			except:
-				pass #traceback.print_exc(file=sys.stdout)
-			
-			try:
-				e_gps=node.elementsByTagName("gps").item(0).toElement()
-				self.gps_source=self.gps_source_ENUM.names.index(QXmlGetAttr(e_gps, "source"))
-				
-				attr=QXmlGetAttr(e_gps, "reconnectInterval")
-				if attr!="":
-					self.gps_reconnectInterval=int(attr)
-					
-				attr=QXmlGetAttr(e_gps, "attemptsDuringRecording")
-				if attr!="":
-					self.gps_attemptsDuringRecording=int(attr)
+		""" Load configuration from settings """
 
-				self.gps_initFile=QXmlGetAttr(e_gps, "initFile")
-				
-				e_gpsSerial=e_gps.elementsByTagName("serial").item(0)
-				if e_gpsSerial:
-					self.gps_serial=QXmlGetNodeStr(e_gpsSerial)
-					self.gps_serialBauds=QXmlGetAttr(e_gpsSerial, "bauds")
-					
-				e_gpsFile=e_gps.elementsByTagName("file").item(0)
-				if e_gpsFile:
-					self.gps_file=QXmlGetNodeStr(e_gpsFile)
-					self.gps_fileCharsPerSecond=QXmlGetAttr(e_gpsFile, "charsPerSecond")
-					
-				e_gpsGpsd=e_gps.elementsByTagName("gpsd").item(0)
-				if e_gpsGpsd:
-					self.gps_gpsdHost=QXmlGetAttr(e_gpsGpsd, "host")
-					self.gps_gpsdPort=int(QXmlGetAttr(e_gpsGpsd, "port"))
-			except:
-				pass #traceback.print_exc(file=sys.stdout)
-				
-			try:
-				e_compass=node.elementsByTagName("compass").item(0).toElement()
-				self.compass_use=parseBool(QXmlGetAttr(e_compass, "use"))
-				self.compass_device=QXmlGetAttr(e_compass, "device")
-				self.compass_bauds=int(QXmlGetAttr(e_compass, "bauds"))
-			except:
-				pass #traceback.print_exc(file=sys.stdout)
+		self.last_preview_scale=25
 
-			elements=node.elementsByTagName("sourcePlugins")
-			SourcePlugins.loadConfig(elements)
+		settings = QSettings()
+		settings.beginGroup("/plugins/GatherPlugin")
+
+		# GUI
+		self.interface_simple = settings.value("interface/simple", QVariant(False)).toBool()
+		self.output_directory = settings.value("output/directory", QVariant(os.path.expanduser("~/qgismapper/data/"))).toString()
+		self.output_append = settings.value("output/append", QVariant(0)).toInt()[0]
+		self.preview_followPosition = settings.value("preview/followPosition", QVariant(True)).toBool()
+		self.preview_scale = settings.value("preview/scale", QVariant(25)).toInt()[0]
+		self.preview_keepPaths = settings.value("preview/keepPaths", QVariant(True)).toBool()
+
+		# gps
+		self.gps_source = settings.value("gps/source", QVariant("serial")).toString()
+		self.gps_reconnectInterval = settings.value("gps/reconnectInterval", QVariant(2)).toInt()[0]
+		self.gps_attemptsDuringRecording = settings.value("gps/attemptsDuringRecording", QVariant(3)).toInt()[0]
+		self.gps_initFile = settings.value("gps/initFile", QVariant()).toString()
+		self.gps_serial = settings.value("gps/serial/device", QVariant("/dev/rfcomm0")).toString()
+		self.gps_serialBauds = settings.value("gps/serial/bauds", QVariant(38400)).toInt()[0]
+		self.gps_file = settings.value("gps/file/path", QVariant(os.path.expanduser("~/nmea_log"))).toString()
+		self.gps_fileCharsPerSecond = settings.value("gps/file/charsPerSecond", QVariant(300)).toInt()[0]
+		self.gps_gpsdHost = settings.value("gps/gpsd/host", QVariant("localhost")).toString()
+		self.gps_gpsdPort = settings.value("gps/gpsd/port", QVariant(2947)).toInt()[0]
+
+		# compass
+		self.compass_use = settings.value("compass/use", QVariant(False)).toBool()
+		self.compass_device = settings.value("compass/device", QVariant("/dev/ttyUSB0")).toString()
+		self.compass_bauds = settings.value("compass/bauds", QVariant(19200)).toInt()[0]
 			
 	def saveConfiguration(self):
-		""" Save configuration to a config file """
-		doc=QDomDocument()
-		docRoot=doc.createElement("configuration")
-		doc.appendChild(docRoot)
+		""" Save configuration to settings """
+
+		settings = QSettings()
+		settings.beginGroup("/plugins/GatherPlugin")
+
+		# GUI
+		settings.setValue("interface/simple", QVariant(self.interface_simple))
+		settings.setValue("output/directory", QVariant(self.output_directory))
+		settings.setValue("output/append", QVariant(self.output_append))
+		settings.setValue("preview/followPosition", QVariant(self.preview_followPosition))
+		settings.setValue("preview/scale", QVariant(self.preview_scale))
+		settings.setValue("preview/keepPaths", QVariant(self.preview_keepPaths))
+
+		# gps
+		settings.setValue("gps/source", QVariant(self.gps_source))
+		settings.setValue("gps/reconnectInterval", QVariant(self.gps_reconnectInterval))
+		settings.setValue("gps/attemptsDuringRecording", QVariant(self.gps_attemptsDuringRecording))
+		settings.setValue("gps/initFile", QVariant(self.gps_initFile))
+		settings.setValue("gps/serial/device", QVariant(self.gps_serial))
+		settings.setValue("gps/serial/bauds", QVariant(self.gps_serialBauds))
+		settings.setValue("gps/file/path", QVariant(self.gps_file))
+		settings.setValue("gps/file/charsPerSecond", QVariant(self.gps_fileCharsPerSecond))
+		settings.setValue("gps/gpsd/host", QVariant(self.gps_gpsdHost))
+		settings.setValue("gps/gpsd/port", QVariant(self.gps_gpsdPort))
+
+		# compass
+		settings.setValue("compass/use", QVariant(self.compass_use))
+		settings.setValue("compass/device", QVariant(self.compass_device))
+		settings.setValue("compass/bauds", QVariant(self.compass_bauds))
+
 		
-		e_iface=doc.createElement("interface")
-		e_iface.setAttribute("simple", str(self.interface_simple))
-		docRoot.appendChild(e_iface)
-		
-		e_output=doc.createElement("output")
-		e_output.setAttribute("append",  str(self.output_append))
-		e_outputDir=doc.createTextNode(self.output_directory)
-		e_output.appendChild(e_outputDir)
-		docRoot.appendChild(e_output)
-		
-		e_preview=doc.createElement("preview")
-		e_preview.setAttribute("followPosition",  str(bool(self.preview_followPosition)))
-		e_preview.setAttribute("scale",  str(self.preview_scale))
-		e_preview.setAttribute("keepPaths",  str(self.preview_keepPaths))
-		docRoot.appendChild(e_preview)
-		
-		e_gps=doc.createElement("gps")
-		e_gps.setAttribute("source",  self.gps_source_ENUM.names[self.gps_source])
-		e_gps.setAttribute("reconnectInterval",  str(self.gps_reconnectInterval))
-		e_gps.setAttribute("attemptsDuringRecording",  str(self.gps_attemptsDuringRecording))
-		e_gps.setAttribute("initFile", str(self.gps_initFile))
-		docRoot.appendChild(e_gps)
-		
-		e_gpsSerial=doc.createElement("serial")
-		e_gpsSerial.setAttribute("bauds", str(self.gps_serialBauds))
-		e_gpsSerialPath=doc.createTextNode(self.gps_serial)
-		e_gpsSerial.appendChild(e_gpsSerialPath)
-		e_gps.appendChild(e_gpsSerial)
-		
-		e_gpsFile=doc.createElement("file")
-		e_gpsFile.setAttribute("charsPerSecond", str(self.gps_fileCharsPerSecond))
-		e_gpsFilePath=doc.createTextNode(self.gps_file)
-		e_gpsFile.appendChild(e_gpsFilePath)
-		e_gps.appendChild(e_gpsFile)
-		
-		e_gpsGpsd=doc.createElement("gpsd")
-		e_gpsGpsd.setAttribute("host", str(self.gps_gpsdHost))
-		e_gpsGpsd.setAttribute("port", str(self.gps_gpsdPort))
-		e_gps.appendChild(e_gpsGpsd)
-		
-		e_compass=doc.createElement("compass")
-		e_compass.setAttribute("use",  str(bool(self.compass_use)))
-		e_compass.setAttribute("device",  str(self.compass_device))
-		e_compass.setAttribute("bauds",  str(self.compass_bauds))
-		docRoot.appendChild(e_compass)
-		
-		e_sourcePlugins=doc.createElement("sourcePlugins")
-		SourcePlugins.saveConfig(doc, e_sourcePlugins)
-		docRoot.appendChild(e_sourcePlugins)
-		
-		file=open(configFilePath,  "w")
-		file.write(doc.toString())
-		file.close()
-		
-	def loadDefaults(self):
-		""" Load default configuration values """
-		self.interface_simple=False
-		self.gps_source_ENUM=Enumerate("SERIAL FILE GPSD")
-		self.gps_source=self.gps_source_ENUM.SERIAL
-		self.gps_reconnectInterval=2
-		self.gps_attemptsDuringRecording=3
-		self.gps_initFile = ""
-		self.gps_serial="/dev/rfcomm0"
-		self.gps_serialBauds=38400
-		self.gps_file=os.path.expanduser("~/nmea_log")
-		self.gps_fileCharsPerSecond=300
-		self.gps_gpsdHost="localhost"
-		self.gps_gpsdPort=2947
-		self.compass_use=False
-		self.compass_device="/dev/ttyUSB0"
-		self.compass_bauds=19200
-		self.output_directory=os.path.expanduser("~/qgismapper/data/")
-		self.output_append=0
-		self.preview_followPosition=True
-		self.preview_scale=25
-		self.last_preview_scale=25
-		self.preview_keepPaths=True
-	
 	def recordingStart(self):
 		""" Start new recording (only call if there isn't any). """
 

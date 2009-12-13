@@ -21,11 +21,8 @@ class PluginGps(QWidget, Ui_PluginGps):
 		QObject.connect(self.updateTimer, SIGNAL("timeout()"), self.updateInfo)
 		self.updateTimer.start(3000) # check in 3 seconds
 		
-	# configuration and recording is done in GpsDaemon, not here...
-	def loadConfig(self, rootElement):
-		return
-	def saveConfig(self, rootElement):
-		return
+		# configuration and recording is done in GpsDaemon, not here...
+
 	def startRecording(self, dataDirectory):
 		pass
 	def stopRecording(self):

@@ -128,17 +128,10 @@ class PluginVideo(QWidget, Ui_PluginVideo):
 			self.recordingEnabledDisabled
 		)
 		
-		self.codec_comboBox.addItem("mpeg4")
-		self.codec_comboBox.addItem("mjpeg")
-		self.codec_comboBox.addItem("libtheora")
-		self.codec_comboBox.addItem("libschroedinger")
-		self.codec_comboBox.addItem("mpeg1video")
-		self.codec_comboBox.addItem("mpeg2video")
-		self.codec_comboBox.addItem("libxvid")
-		self.codec_comboBox.addItem("libx264")
-		self.codec_comboBox.addItem("hoffyuv")
-		self.codec_comboBox.addItem("wmv1")
-		self.codec_comboBox.addItem("wmv2")
+		for codec in ["mpeg4","mjpeg","libtheora","libschroedinger","mpeg1video","mpeg2video","libxvid","libx264","hoffyuv","wmv1","wmv2"]:
+			self.codec_comboBox.addItem(codec)
+
+		self.loadConfig()
 	
 	def finalizeUI(self):
 		self.enabledCheckBox=self.controller.getRecordingEnabledAuxCheckbox(self.name)
@@ -149,55 +142,44 @@ class PluginVideo(QWidget, Ui_PluginVideo):
 		)
 		self.deviceCountChanged()
 		self.recordingEnabledDisabled()
+
+	def unload(self):
+		self.saveConfig()
 		
-	def loadConfig(self, rootElement):
-		if not rootElement:
-			return
-		ludE=rootElement.elementsByTagName("lastUsedDevices")
-		if ludE.count()!=0:
-			ludE=ludE.item(0).toElement()
-			
-			elements=ludE.elementsByTagName("device")
-			for e in range(0, elements.count()):
-				dev=elements.item(e).toElement()
-				if PluginVideoWorker.isDevicePresent(str(dev.attribute("path"))):
-					devTab=self.addDevice(str(dev.attribute("path")))
-					devTab.setMode(str(dev.attribute("mode")))
-					devTab.setPreviewActive(parseBool(str(dev.attribute("showPreview"))))
-		
-		if (rootElement.attribute("recordingEnabled")!=""):
-			self.recordingEnabled_button.setChecked(
-				int(rootElement.attribute("recordingEnabled"))
-			)
-			
-		if (rootElement.attribute("codec")!=""):
-			self.codec_comboBox.lineEdit().setText(rootElement.attribute("codec"))
-		
-		if (rootElement.attribute("bitrate")!=""):
-			self.codecBitrate_spinBox.setValue(int(rootElement.attribute("bitrate")))
-		
-	def saveConfig(self, rootElement):
-		doc=rootElement.ownerDocument()
-		lastUsedDevices=doc.createElement("lastUsedDevices")
+	def loadConfig(self):
+
+		settings = QSettings()
+		settings.beginGroup("/plugins/GatherPlugin/Video")
+
+		lastUsedDevices = settings.value("lastUsedDevices").toStringList()
+		for i,device in enumerate(lastUsedDevices):
+			if PluginVideoWorker.isDevicePresent(str(device)):
+				devTab=self.addDevice(str(device))
+				devTab.setMode( str(settings.value("devices/%d/mode" % i).toString()) )
+				devTab.setPreviewActive( settings.value("devices/%d/showPreview" % i).toBool() )
+
+		self.recordingEnabled_button.setChecked( settings.value("recordingEnabled", QVariant(True)).toBool() )
+		self.codec_comboBox.lineEdit().setText( settings.value("codec", QVariant("mpeg2video")).toString() )
+		self.codecBitrate_spinBox.setValue( settings.value("bitrate", QVariant(600)).toInt()[0] )
+
+	def saveConfig(self):
+
+		settings = QSettings()
+		settings.beginGroup("/plugins/GatherPlugin/Video")
+
+		lastUsedDevices = []
 		for tabI in self.getVideoTabIndexes():
-			tab=self.settings_tabWidget.widget(tabI)
+			tab = self.settings_tabWidget.widget(tabI)
 			if PluginVideoWorker.isDevicePresent(str(tab.device)):
-				xDev=doc.createElement("device")
-				xDev.setAttribute("path", str(tab.device))
-				xDev.setAttribute("mode", str(tab.getCurrentModeStr()))
-				xDev.setAttribute("showPreview", str(tab.isPreviewActive()))
-				
-				lastUsedDevices.appendChild(xDev)
-		rootElement.appendChild(lastUsedDevices)
-		
-		rootElement.setAttribute("recordingEnabled",
-			str(int(self.recordingEnabled_button.isChecked()))
-		)
-		
-		rootElement.setAttribute("codec", self.getCurrentCodec())
-		
-		rootElement.setAttribute("bitrate", str(self.getCurrentKBitrate()))
-		
+				settings.setValue("devices/%d/mode" % len(lastUsedDevices), QVariant(tab.getCurrentModeStr()))
+				settings.setValue("devices/%d/showPreview" % len(lastUsedDevices), QVariant(tab.isPreviewActive()))
+				lastUsedDevices.append(str(tab.device))
+		settings.setValue("lastUsedDevices", QVariant(lastUsedDevices))
+
+		settings.setValue("recordingEnabled", QVariant(self.recordingEnabled_button.isChecked())) 
+		settings.setValue("codec", QVariant(self.getCurrentCodec()))
+		settings.setValue("bitrate", QVariant(self.getCurrentKBitrate()))
+
 	def startRecording(self, dataDirectory):
 		self.setParameterChangingUIEnabled(0)
 		
