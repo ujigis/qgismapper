@@ -116,6 +116,9 @@ class PluginNotes(QWidget, Ui_PluginNotes):
 		self.addTempMarkCanvasItem(pos)
 
 		self.note_stackedWidget.setCurrentIndex(1)
+
+		# set focus so the user can directly type the note
+		self.note_lineEdit.setFocus(Qt.OtherFocusReason)
 		
 	def commitMark(self, withNote):
 		if withNote:
