@@ -42,12 +42,6 @@ class PluginAudio(QWidget, Ui_PluginAudio):
 			self.audioQuitter, SIGNAL("oggEnded()"), self.onOggEnded
 		)
 		
-	def loadConfig(self, rootElement):
-		return
-		
-	def saveConfig(self, rootElement):
-		return
-	
 	def loadRecording(self, dataDirectory):
 		self.active_checkBox.setChecked(False)
 		

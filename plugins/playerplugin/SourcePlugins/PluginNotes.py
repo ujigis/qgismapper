@@ -67,11 +67,6 @@ class PluginNotes(QWidget, Ui_PluginNotes):
 		self.name="Notes"
 		self.markers=[]
 		
-	def loadConfig(self, rootElement):
-		pass
-	def saveConfig(self, rootElement):
-		pass
-	
 	def loadRecording(self, dataDirectory):
 		self.setEnabled(0)
 		self.dataDirectory=dataDirectory+self.name+"/"

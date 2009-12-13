@@ -43,36 +43,16 @@ def initializeUI(tabWidget):
 	for plugin in loadedPlugins:
 		tabWidget.addTab(plugin, plugin.name)
 
-def loadConfig(rootElement):
+def unloadPlugins():
 	"""
-	Load plugins' configurations from under specified xml element.
-	This happens by calling the loadConfig method of plugin.
+	Notify plugins about unloading and then free=delete them.
 	"""
-	configuredPlugins=[]
+	global loadedPlugins
 	
-	for e in range(0, rootElement.count()):
-		element=rootElement.item(e).toElement()
-		
-		for plugin in loadedPlugins:
-			e_cnf=element.elementsByTagName(plugin.name)
-			if (e_cnf.count()!=0):
-				plugin.loadConfig(e_cnf.item(0).toElement())
-				configuredPlugins=configuredPlugins+[plugin.name]
-
 	for plugin in loadedPlugins:
-		if not plugin.name in configuredPlugins:
-			plugin.loadConfig(None)
-	
-
-def saveConfig(doc, rootElement):
-	"""
-	Save plugins' configurations under specified xml element.
-	This happens by calling the saveConfig method of plugin.
-	"""
-	for plugin in loadedPlugins:
-		e_cnf=doc.createElement(plugin.name)
-		plugin.saveConfig(e_cnf)
-		rootElement.appendChild(e_cnf)
+		if "unload" in dir(plugin):
+			plugin.unload()
+	loadedPlugins=[]
 	
 def callMethodOnEach(method, *params):
 	"""

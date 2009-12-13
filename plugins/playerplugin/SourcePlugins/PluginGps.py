@@ -18,11 +18,6 @@ class PluginGps(QWidget, Ui_PluginGps):
 		self.info_tableWidget.setRowCount(10)
 		self.info_tableWidget.setColumnWidth(1, int(self.info_tableWidget.columnWidth(1)*1.5))
 		
-	def loadConfig(self, rootElement):
-		return
-	def saveConfig(self, rootElement):
-		return
-	
 	def loadRecording(self, dataDirectory):
 		self.setEnabled(1)
 		self.dataDirectory=dataDirectory

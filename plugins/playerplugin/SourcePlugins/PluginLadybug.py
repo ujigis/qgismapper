@@ -19,22 +19,10 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		self.wGeom = QByteArray()
 		self.startTime = None
 		
-	def loadConfig(self, rootElement):
-		"""
-		This method is the first one called after the plugin object is created.
-		It should load plugin's configuration from the specified QtXml
-		element (and subelements, if needed). If no plugin configuration element
-		was found in the configuration file, the rootElement is set to None.
-		"""
 		s = QSettings()
 		self.wGeom = s.value("/plugins/player/ladybugwidget").toByteArray()
 		
-	def saveConfig(self, rootElement):
-		"""
-		This method should save plugin's configuration to attributes of the
-		specified QtXml element and/or to it's child elements. It's called right
-		before the plugin is "deleted".
-		"""
+	def unload(self):
 		if self.w is not None:
 			s = QSettings()
 			s.setValue("/plugins/player/ladybugwidget", QVariant(self.w.saveGeometry()))
