@@ -16,11 +16,8 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		self.setupUi(self)
 		self.name="Ladybug"
 		self.w = None
-		self.wGeom = QByteArray()
 		self.startTime = None
 		
-		s = QSettings()
-		self.wGeom = s.value("/plugins/player/ladybugwidget").toByteArray()
 		
 	def unload(self):
 		if self.w is not None:
@@ -37,9 +34,11 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		if os.path.exists(streamPath):
 			if self.w is None:
 				self.w = LadybugWidget()
+				s = QSettings()
+				geom = s.value("/plugins/player/ladybugwidget").toByteArray()
+				if not geom.isEmpty():
+					self.w.restoreGeometry(geom)
 				self.w.setWindowFlags(self.w.windowFlags() | Qt.WindowStaysOnTopHint)
-				if not self.wGeom.isEmpty():
-					self.w.restoreGeometry(self.wGeom)
 			self.w.openStream(streamPath)
 			self.w.show()
 	
