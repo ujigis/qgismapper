@@ -158,9 +158,9 @@ class GpsDaemon_opener(QThread):
 		while self.doReset:
 			self.doReset=False
 			c = self.daemon.controller # shortcut :-)
-			if (c.gps_source==c.gps_source_ENUM.SERIAL):
+			if c.gps_source == "serial":
 				src=GpsSource_serial(c.gps_serial, c.gps_serialBauds, c.gps_initFile)
-			elif (c.gps_source==c.gps_source_ENUM.FILE):
+			elif c.gps_source == "file":
 				src=GpsSource_file(c.gps_file, c.gps_fileCharsPerSecond)
 			else:
 				if gpsModuleAvailable:

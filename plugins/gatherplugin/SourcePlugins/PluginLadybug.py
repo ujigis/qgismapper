@@ -55,12 +55,24 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 		
 		self.lblRecord.setText("") # what to show there when idle?
 		
+		# load settings
+		settings = QSettings()
+		settings.beginGroup("/plugins/GatherPlugin/Ladybug")
+		self.cam_index = settings.value("camera", QVariant(1)).toInt()[0]
+		self.btnEnableRecording.setChecked( settings.value("recordingEnabled", QVariant(True)).toBool() )
+
 		
 	def unload(self):
 		""" called when plugin is going to quit """
 		# stop the recording!
 		if self.cam.isActive():
 			self.cam.exit()
+
+		# save configuration
+		settings = QSettings()
+		settings.beginGroup("/plugins/GatherPlugin/Ladybug")
+		settings.setValue("camera", QVariant(self.cboCamera.currentIndex()) )
+		settings.setValue("recordingEnabled", QVariant(self.btnEnableRecording.isChecked()) )
 
 	def cameraChanged(self, index):
 		self.cam_index = index
@@ -193,29 +205,6 @@ class PluginLadybug(QWidget, Ui_PluginLadybug):
 			gpsTime = QDateTime.fromString(np.time, "yyyy-MM-dd hh:mm:ss")
 			self.cam.setCurrentGpsInfo( LadybugGpsInfo(np.lon, np.lat, np.altitude, gpsTime) )
 
-
-	# CONFIGURATION LOAD/SAVE
-
-	def loadConfig(self, rootElement):
-		"""
-		This method should load plugin's configuration from the
-		specified QtXml element (and subelements, if needed).
-		"""
-		if not rootElement:
-			return
-		self.cam_index = rootElement.attribute("camera", "1").toInt()[0]
-		
-		self.btnEnableRecording.setChecked( rootElement.attribute("recordingEnabled", "1").toInt()[0] )
-		
-		
-	def saveConfig(self, rootElement):
-		"""
-		This method should save plugin's configuration to and
-		under the specified QtXml element.
-		"""
-		rootElement.setAttribute("camera", str(self.cboCamera.currentIndex()) )
-
-		rootElement.setAttribute("recordingEnabled", "1" if self.btnEnableRecording.isChecked() else "0")
 
 	# UNUSED STUFF
 

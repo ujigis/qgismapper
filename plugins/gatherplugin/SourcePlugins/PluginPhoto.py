@@ -28,11 +28,6 @@ class PluginPhoto(QWidget, Ui_PluginPhoto):
 		QObject.connect(self.addPictures_button, SIGNAL("clicked()"), self.addPictures)
 		self.recording=0
 		
-	def loadConfig(self,  rootElement):
-		return
-	def saveConfig(self,  rootElement):
-		return	
-	
 	def startRecording(self, dataDirectory):
 		self.dataDirectory=dataDirectory+self.name+"/"
 		self.recording=1

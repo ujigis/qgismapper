@@ -17,33 +17,11 @@ class PluginDummy(QWidget, Ui_PluginDummy):
 		#so it's good idea to name it the same as the file (between Plugin and .py)
 		self.name="Dummy"
 	
-	def loadConfig(self, rootElement):
-		"""
-		Mandatory method.
-		This method is the first one called after the plugin object is created.
-		It should load plugin's configuration from the specified QtXml
-		element (and subelements, if needed). If no plugin configuration element
-		was found in the configuration file, the rootElement is set to None.
-		"""
-		if not rootElement:
-			#No previous configuration exists, use some meaningful defaults here
-			self.rv=12345
-			return
-		
-		if (rootElement.attribute("randomVal")!=""):
-			self.rv=int(rootElement.attribute("randomVal"))
-		
-	def saveConfig(self, rootElement):
-		"""
-		Mandatory method.
-		This method should save plugin's configuration to attributes of the
-		specified QtXml element and/or to it's child elements. It's called right
-		before the plugin is "deleted".
-		"""
-		rootElement.setAttribute("randomVal",
-			str(int(self.rv))
-		)
-	
+		# load some configuration variables
+		settings = QSettings()
+		# If no previous configuration exists, use some meaningful defaults here
+		self.rv = settings.value("/plugins/GatherPlugin/Dummy/randomVal", QVariant(12345)).toInt()[0]
+			
 	def finalizeUI(self):
 		"""
 		Mandatory method.
@@ -54,6 +32,14 @@ class PluginDummy(QWidget, Ui_PluginDummy):
 		(e.g. controller.getRecordingEnabledAuxCheckbox)
 		"""
 		pass
+
+	def unload(self):
+		"""
+		Non-mandatory method.
+		Allows plugin to do some cleanups and save configuration.
+		"""
+		settings = QSettings()
+		settings.setValue("/plugins/GatherPlugin/Dummy/randomVal", QVariant(self.rv))
 	
 	def startRecording(self, dataDirectory):
 		"""

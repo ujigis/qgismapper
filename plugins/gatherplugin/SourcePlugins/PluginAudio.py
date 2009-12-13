@@ -25,13 +25,16 @@ class PluginAudio(QWidget, Ui_PluginAudio):
 	
 		# populate the input devices combo
 		settings = QSettings()
-		defaultDeviceIndex = settings.value("/plugins/GatherPlugin/Audio/inputDevice", PluginAudioWorker.defaultDeviceIndex()).toInt()[0]
+		settings.beginGroup("/plugins/GatherPlugin/Audio")
+		defaultDeviceIndex = settings.value("inputDevice", PluginAudioWorker.defaultDeviceIndex()).toInt()[0]
 		for device in PluginAudioWorker.devices():
 			if device.isInput:
 				self.cboInputDevice.addItem( "[%s] %s" % (device.api, device.name), QVariant(device.index))
 			if device.index == defaultDeviceIndex:
 				self.cboInputDevice.setCurrentIndex( self.cboInputDevice.count()-1 ) # use last added device
 
+		enabled = settings.value("recordingEnabled", QVariant(True)).toBool()
+		self.recordingEnabled_button.setChecked(enabled)
 
 	def finalizeUI(self):
 		self.enabledCheckBox=self.controller.getRecordingEnabledAuxCheckbox(self.name)
@@ -47,30 +50,18 @@ class PluginAudio(QWidget, Ui_PluginAudio):
 	def unload(self):
 		self.killTimer(self.audioStatusTimer)
 		
+		settings = QSettings()
+		settings.beginGroup("/plugins/GatherPlugin/Audio")
 		if self.cboInputDevice.currentIndex() >= 0:
-			settings = QSettings()
 			device = self.cboInputDevice.itemData(self.cboInputDevice.currentIndex()).toInt()[0]
-			settings.setValue("/plugins/GatherPlugin/Audio/inputDevice", device)
+			settings.setValue("inputDevice", device)
+
+		enabled = self.recordingEnabled_button.isChecked()
+		settings.setValue("recordingEnabled", QVariant(enabled))
 
 		PluginAudioWorker.stopAudio()
 		PluginAudioWorker.uninitializeAudio()
 		
-	def loadConfig(self, rootElement):
-		if not rootElement:
-			return
-			
-		if (rootElement.attribute("recordingEnabled")!=""):
-			self.recordingEnabled_button.setChecked(
-				int(rootElement.attribute("recordingEnabled"))
-			)
-		else:
-			self.recordingEnabled_button.setChecked(True)
-		
-	def saveConfig(self, rootElement):
-		rootElement.setAttribute("recordingEnabled",
-			str(int(self.recordingEnabled_button.isChecked()))
-		)
-	
 	def startRecording(self, dataDirectory):
 		self.setEnabled(False)
 		self.enabledCheckBox.setEnabled(False)
