@@ -149,12 +149,6 @@ class PluginVideo(QWidget, Ui_PluginVideo):
 		self.connect(self.records_comboBox, SIGNAL("currentIndexChanged(int)"), lambda f:self.openRecording(f))
 		QObject.connect(self.active_checkBox, SIGNAL("stateChanged(int)"), self.isActiveChanged)
 		
-	def loadConfig(self, rootElement):
-		pass
-		
-	def saveConfig(self, rootElement):
-		pass
-	
 	def loadRecording(self, dataDirectory):
 		self.records_comboBox.clear()
 		

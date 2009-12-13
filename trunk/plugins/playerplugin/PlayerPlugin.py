@@ -18,8 +18,6 @@ from GpxFile import GpxFile,GpxCreation
 import NMEA
 
 
-configFilePath=os.path.expanduser("~/.qgis/QGisMapper_PlayerPlugin.xml")
-""" path to plugins configuration file """
 
 def parseBool(str):
 	return {"True":True, "False":False}[str]
@@ -127,6 +125,8 @@ class PlayerPlugin(QObject):
 
 		self.unloadRecording()
 		
+		SourcePlugins.unloadPlugins()
+
 		self.dockWidget.unload()
 		self.saveConfiguration()
 		self.iface.removeDockWidget(self.dockWidget)
@@ -140,61 +140,25 @@ class PlayerPlugin(QObject):
 		SourcePlugins.loadPlugins(self)
 	
 	def loadConfiguration(self):
-		""" Load configuration from a config file """
-		self.loadDefaults()
-		if os.path.isfile(configFilePath):
-			try:
-				dom1=QDomDocument()
-				dom1.setContent(open(configFilePath).read())
-				node = dom1.documentElement()
-			except:
-				return
-			
-			try:
-				e_source=node.elementsByTagName("source").item(0)
-				self.source_directory=QXmlGetNodeStr(e_source)
-			except:
-				pass
-				
-			try:
-				e_replay=node.elementsByTagName("replay").item(0)
-				self.replay_followPosition=parseBool(QXmlGetAttr(e_replay, "followPosition"))
-				self.replay_speed=int(QXmlGetAttr(e_replay, "speed"))
-			except:
-				pass
-			
-			elements=node.elementsByTagName("sourcePlugins")
-			SourcePlugins.loadConfig(elements)
-		
+		""" Load configuration from settings """
+
+		settings = QSettings()
+		settings.beginGroup("/plugins/PlayerPlugin")
+
+		self.source_directory = str( settings.value("source", QVariant(os.path.expanduser("~/qgismapper/data/"))).toString() )
+		self.replay_followPosition = settings.value("followPosition", QVariant(True)).toBool()
+		self.replay_speed = settings.value("speed", QVariant(100)).toInt()[0]
+
 	def saveConfiguration(self):
-		""" Save configuration to a config file """
-		doc=QDomDocument()
-		docRoot=doc.createElement("configuration")
-		doc.appendChild(docRoot)
-		
-		e_replay=doc.createElement("replay")
-		e_replay.setAttribute("followPosition",  str(bool(self.replay_followPosition)))
-		e_replay.setAttribute("speed",  str(int(self.replay_speed)))
-		docRoot.appendChild(e_replay)
-		
-		e_source=doc.createElement("source")
-		e_sourceDir=doc.createTextNode(self.source_directory)
-		e_source.appendChild(e_sourceDir)
-		docRoot.appendChild(e_source)
-				
-		e_sourcePlugins=doc.createElement("sourcePlugins")
-		SourcePlugins.saveConfig(doc, e_sourcePlugins)
-		docRoot.appendChild(e_sourcePlugins)
-		
-		file=open(configFilePath,  "w")
-		file.write(doc.toString())
-		file.close()
-		
-	def loadDefaults(self):
-		""" Load default configuration values """
-		self.source_directory=os.path.expanduser("~/qgismapper/data/")
-		self.replay_followPosition=True
-		self.replay_speed=100
+		""" Save configuration to settings """
+
+		settings = QSettings()
+		settings.beginGroup("/plugins/PlayerPlugin")
+
+		settings.setValue("source", QVariant(self.source_directory))
+		settings.setValue("followPosition", QVariant(self.replay_followPosition))
+		settings.setValue("speed", QVariant(int(self.replay_speed)))
+
 	
 	def loadRecordingsList(self):
 		"""Load list of recordings in the current list.source_directory."""
