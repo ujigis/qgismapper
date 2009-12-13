@@ -14,17 +14,8 @@ from CanvasMarkers import PositionMarker
 import math
 from ReplayMapTool import *
 
-# find out whether qgismapper support has been installed
-try:
-	has_qgismapper = True
-	import qgismapper
-except ImportError, e:
-	has_qgismapper = False
-
-# continue with loading 
-if has_qgismapper:
-	from qgismapper.GpxFile import GpxFile,GpxCreation
-	from qgismapper import NMEA
+from GpxFile import GpxFile,GpxCreation
+import NMEA
 
 
 configFilePath=os.path.expanduser("~/.qgis/QGisMapper_PlayerPlugin.xml")
@@ -98,11 +89,6 @@ class PlayerPlugin(QObject):
 	def initGui(self):
 		""" Initialize plugin's UI """
 		
-		if not has_qgismapper:
-			QMessageBox.information(self.iface.mainWindow(), "Player plugin",
-				"It seems that 'qgismapper' python module is missing.\nYou have to install it in order to use Player plugin.")
-			return
-		
 		#basic stuff
 		self.lastRecordingLayer=None
 		self.recording=0
@@ -138,9 +124,6 @@ class PlayerPlugin(QObject):
 		
 	def unload(self):
 		""" Cleanup and unload the plugin """
-
-		if not has_qgismapper:
-			return # ... wasn't initialized
 
 		self.unloadRecording()
 		

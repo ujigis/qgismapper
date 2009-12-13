@@ -5,10 +5,10 @@ from PyQt4.QtXml import *
 from PyQt4.QtTest import *
 import SourcePlugins
 import serial
-from qgismapper import NMEA
+import NMEA
 import time,  datetime
 import sys,  os
-from qgismapper.GpxFile import GpxCreation
+from GpxFile import GpxCreation
 import logging
 
 #maximal allowed delay (in seconds) between start of trksegment recording and

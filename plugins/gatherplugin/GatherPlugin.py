@@ -15,16 +15,7 @@ import traceback
 from CanvasMarkers import PositionMarker
 import logging, logging.handlers
 
-# find out whether qgismapper support has been installed
-try:
-	has_qgismapper = True
-	import qgismapper
-except ImportError, e:
-	has_qgismapper = False
-
-# continue with loading 
-if has_qgismapper:
-	from GpsDaemon import GpsDaemon
+from GpsDaemon import GpsDaemon
 
 #path to plugin's configuration file
 configFilePath=os.path.expanduser("~/.qgis/QGisMapper_GatherPlugin.xml")
@@ -52,11 +43,6 @@ class GatherPlugin(QObject):
 	
 	def initGui(self):
 		""" Initialize plugin's UI """
-
-		if not has_qgismapper:
-			QMessageBox.information(self.iface.mainWindow(), "Gather plugin",
-				"It seems that 'qgismapper' python module is missing.\nYou have to install it in order to use Gather plugin.")
-			return
 
 		self.initLogging()
 		self.recording=False
@@ -95,9 +81,6 @@ class GatherPlugin(QObject):
 
 	def unload(self):
 		""" Cleanup and unload the plugin """
-
-		if not has_qgismapper:
-			return # ... wasn't initialized
 
 		self.canvas.scene().removeItem(self.positionMarker)
 		self.positionMarker=None
