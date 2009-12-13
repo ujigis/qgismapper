@@ -265,8 +265,10 @@ bool LadybugStream::writeImage(const LadybugImage& image)
 
 
   // make sure the writes get to disk and not only to caches!
+#ifndef WIN32
   if (mNumFrames % 16 == 15)
     sync();
+#endif
 
   // generate a record for GPS summary (if there's any gps input)
   if (mNumFrames % 50 == 0 && mLastGpsInfo.isValid())

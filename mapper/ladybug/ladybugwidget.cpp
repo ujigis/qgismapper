@@ -14,6 +14,8 @@
 #include <QPushButton>
 #include <QKeyEvent>
 
+#include <cstdlib>
+
 #include "ladybugimage.h"
 
 #include "ladybugplayerthread.h"
@@ -375,7 +377,7 @@ void LadybugWidget::keyPressEvent(QKeyEvent* e)
     // %%% seek to random position (for testing)
     case Qt::Key_S:
       {
-        uint msecs = random() % (mStream.framesCount() / 15 * 1000);
+        uint msecs = rand() % (mStream.framesCount() / 15 * 1000);
         printf("RANDOM TIME SEEK! %d ms\n", msecs);
         seekToTime(msecs);
         break;
