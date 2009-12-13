@@ -52,10 +52,8 @@ class NoteMarker(QgsMapCanvasItem):
 		if not self.pos:
 			return
 		
-		if self.note==None:
-			p.setPen(QColor(0,255,0))
-		else:
-			p.setPen(QColor(0,128,192))
+		color = QColor(0,255,0) if self.note is None else QColor(0,128,192)
+		p.setPen(QPen(QBrush(color),2))
 			
 		p.drawLine(-5,-5,5,5)
 		p.drawLine(5,-5,-5,5)

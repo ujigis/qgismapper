@@ -245,8 +245,9 @@ class PlayerPlugin(QObject):
 		
 		try:
 			self.__loadRecording(path)
-		except:
-			pass
+		except Exception, e:
+			import traceback
+			QMessageBox.warning(None, self.tr("Error"), "An error occurred when loading recording:\n" + traceback.format_exc())
 			
 		self.dockWidget.setEnabled(True)
 		
@@ -276,9 +277,18 @@ class PlayerPlugin(QObject):
 		#but DockWidget should be disabled during __loadRecording(), thus preventing
 		#user to click any user interface widgets...
 		self.lastRecordingLayer=QgsVectorLayer(gpxFilePath+"?type=track", pathParts[len(pathParts)-1]+" track", "gpx")
+
+		# make the recording path wider
+		renderer = self.lastRecordingLayer.renderer()
+		if renderer:
+			renderer.symbols()[0].setLineWidth(3*renderer.symbols()[0].lineWidth())
+		else: # there's a V2 renderer
+			rendererv2 = self.lastRecordingLayer.rendererV2()
+			rendererv2.symbol().setWidth( 3*rendererv2.symbol().width() )
+
 		QgsMapLayerRegistry.instance().addMapLayer( self.lastRecordingLayer )
 		QgsProject.instance().dirty( True )
-		
+
 		self.replay_currentPos=0
 		
 		SourcePlugins.callMethodOnEach("loadRecording", (path+"/",))

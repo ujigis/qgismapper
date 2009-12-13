@@ -362,7 +362,7 @@ class GatherPlugin(QObject):
 		"""Initialize previewing recorded path"""
 		self.rubberBand=QgsRubberBand(self.canvas)
 		self.rubberBand.setColor(Qt.red)
-		self.rubberBand.setWidth(1)
+		self.rubberBand.setWidth(3)
 		self.rubberBand.reset(False)
 	
 	def recordingStopPathPreview(self):
