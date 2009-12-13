@@ -123,6 +123,8 @@ protected:
   void paintEvent(QPaintEvent* e);
   void keyPressEvent(QKeyEvent* e);
   void closeEvent(QCloseEvent* event);
+  void wheelEvent(QWheelEvent* e);
+  void mousePressEvent(QMouseEvent* event);
 
   uint cameraMask();
 
