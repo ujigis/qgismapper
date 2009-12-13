@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>PluginGps</class>
- <widget class="QWidget" name="PluginGps" >
-  <property name="geometry" >
+ <widget class="QWidget" name="PluginGps">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,31 +10,28 @@
     <height>241</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" >
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTableWidget" name="info_tableWidget" >
-     <property name="enabled" >
+    <widget class="QTreeWidget" name="info_treeWidget">
+     <property name="enabled">
       <bool>true</bool>
      </property>
-     <property name="editTriggers" >
+     <property name="editTriggers">
       <set>QAbstractItemView::NoEditTriggers</set>
      </property>
-     <property name="cornerButtonEnabled" >
+     <property name="rootIsDecorated">
       <bool>false</bool>
      </property>
-     <property name="columnCount" >
-      <number>2</number>
-     </property>
      <column>
-      <property name="text" >
-       <string>Item</string>
+      <property name="text">
+       <string>Key</string>
       </property>
      </column>
      <column>
-      <property name="text" >
+      <property name="text">
        <string>Value</string>
       </property>
      </column>

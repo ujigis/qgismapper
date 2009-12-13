@@ -15,8 +15,10 @@ class PluginGps(QWidget, Ui_PluginGps):
 		
 		self.setupUi(self)
 		self.name="Gps"
-		self.info_tableWidget.setRowCount(10)
-		self.info_tableWidget.setColumnWidth(1, int(self.info_tableWidget.columnWidth(1)*1.5))
+
+		# create 10 empty items
+		items = [ QTreeWidgetItem(None, [ "", ""]) for i in xrange(10) ]
+		self.info_treeWidget.insertTopLevelItems(0, items)
 		
 	def loadRecording(self, dataDirectory):
 		self.setEnabled(1)
@@ -47,9 +49,10 @@ class PluginGps(QWidget, Ui_PluginGps):
 		self.showInfoItem(8, self.tr("VDop"), str(vdop))
 		self.showInfoItem(9, self.tr("PDop"), str(pdop))
 	
-	def showInfoItem(self, row, item, val):
-		self.info_tableWidget.setItem(row, 0, QTableWidgetItem(item))
-		self.info_tableWidget.setItem(row, 1, QTableWidgetItem(val))
+	def showInfoItem(self, row, key, val):
+		item = self.info_treeWidget.topLevelItem(row)
+		item.setText(0, key)
+		item.setText(1, val)
 	
 	def onMouseButtonPressed(self, button, canvasPoint, recordingLayerPoint):
 		return False
