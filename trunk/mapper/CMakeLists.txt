@@ -37,7 +37,9 @@ ELSE ()
 ENDIF ()
 
 IF (WITH_LADYBUG)
-  FIND_PACKAGE(Dc1394 REQUIRED)
+  IF (NOT WIN32)
+    FIND_PACKAGE(Dc1394 REQUIRED)
+  ENDIF ()
   MESSAGE(STATUS "Ladybug2 support: YES")
 ELSE ()
   MESSAGE(STATUS "Ladybug2 support: NO")
@@ -59,7 +61,9 @@ set(SIP_EXTRA_OPTIONS ${PYQT4_SIP_FLAGS})
 
 # force static libraries to be built as position independent code
 # so that they can be used within (shared) python modules
-ADD_DEFINITIONS(-fPIC)
+IF (NOT MSVC)
+  ADD_DEFINITIONS(-fPIC)
+ENDIF ()
 
 # Qt4
 FIND_PACKAGE(Qt4 REQUIRED)

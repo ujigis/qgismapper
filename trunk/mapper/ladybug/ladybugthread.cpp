@@ -12,6 +12,8 @@
 #include "ladybugimage.h"
 //#include "ladybug.h"
 
+#include <cstdlib>
+
 #include <QTime>
 
 #ifndef WIN32
@@ -353,7 +355,7 @@ void LadybugRecordingThread::writeImage(LadybugImage& img)
   if (mImageQueue.count() > MAX_QUEUE)
   {
     // our queue is too big. select a random frame from queue and remove it
-    int at = random() % mImageQueue.count();
+    int at = rand() % mImageQueue.count();
     fprintf(stderr, "queue full, discarding a frame! (%d)\n", at);
     delete mImageQueue.takeAt(at);
     mFramesDiscarded++;

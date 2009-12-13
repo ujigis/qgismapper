@@ -8,7 +8,6 @@
  ******************************************************************************/
 
 #include <stdio.h>
-#include <inttypes.h>   // kvoli PRIx64
 
 #ifndef WIN32
 #include <dc1394/dc1394.h>
@@ -627,12 +626,20 @@ bool Ladybug::isActive() const
 
 bool Ladybug::setJpegCompression(bool autoControl, int jpgQuality, int bufferUsage)
 {
+#ifndef WIN32
   return set_jpeg_compression(d->camera, autoControl, jpgQuality, bufferUsage);
+#else
+  return false;
+#endif
 }
 
 bool Ladybug::jpegCompression(bool& autoControl, int& jpgQuality, int& bufferUsage)
 {
+#ifndef WIN32
   return get_jpeg_compression(d->camera, autoControl, jpgQuality, bufferUsage);
+#else
+  return false;
+#endif
 }
 
 LadybugCounter& Ladybug::counter()
