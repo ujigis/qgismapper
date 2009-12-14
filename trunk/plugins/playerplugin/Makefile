@@ -13,5 +13,6 @@ $(UI_FILES): %_ui.py: %.ui
 	${UIC} $< > $@
 
 clean:
-	rm -f *.pyc SourcePlugins/*.pyc
+	find . -name '*.pyc' -exec rm '{}' ';'
+	find . -name '*~' -exec rm '{}' ';'
 	rm -f ${UI_FILES}
