@@ -7,7 +7,7 @@ UI_FILES=$(patsubst %.ui,%_ui.py,$(UI_SOURCES))
 all: resources.py ${UI_FILES}
 
 resources.py: resources.qrc
-	${RCC} -o resources.py resources.qrc
+	${RCC} -o resources_rc.py resources.qrc
 
 $(UI_FILES): %_ui.py: %.ui
 	${UIC} $< > $@

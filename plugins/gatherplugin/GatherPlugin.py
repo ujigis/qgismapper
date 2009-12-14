@@ -4,7 +4,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtXml import *
 from qgis.core import *
 from qgis.gui import *
-import resources
+import resources_rc
 from DockWidget import DockWidget
 from DockWidget_simple import DockWidget_simple
 import SourcePlugins
