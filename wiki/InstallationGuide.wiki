@@ -4,7 +4,7 @@
 
 This page describes how to install QGIS Mapper project.
 
-The project consists of two parts: Data capture tool and replay tool. Both of them are implemented as (Python) plugins for [http://www.qgis.org/ Quantum GIS]. Prior to downloading the plugins it's necessary to install *qgismapper library* that is responsible for hardware handling (cameras, microfone etc). Without the library it's not possible to run the plugins.
+The project consists of two parts: Data capture tool and replay tool. Both of them are implemented as (Python) plugins for [http://www.qgis.org/ Quantum GIS]. Prior to downloading the plugins it's recommended to install *qgismapper library* that is responsible for hardware handling (cameras, microfone etc). Without the library it's not possible to do audio/video capture and replay.
 
 The whole installation process can be split into three steps.
 
@@ -14,8 +14,13 @@ First of all you'll need to have Quantum GIS installed on your computer.
 
 You can get it from the [http://www.qgis.org/en/download.html download page] either as a binary package or you can compile it from source code.
 
+You should be able to use any version >= 1.0. For better functionality and performance we recommend using the latest version.
 
-== Step 2: qgismapper Library ==
+== Step 2: qgismapper Library (optional) ==
+
+Installation of this library is optional as it just brings additional value to the plugins.
+
+If you are not interested in audio and video support you can skip this section and go to step 3.
 
 Currently there are no binary packages available so you'll have to compile the library from source.
 
