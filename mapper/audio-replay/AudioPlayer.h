@@ -35,8 +35,10 @@ bool audio_terminate();
 
 /**
  * Start replaying decoded data
+ *
+ * Use specified output device. When -1 is passed, it will use default device.
 **/
-bool audio_start();
+bool audio_start(int outputDevice = -1);
 
 /**
  * Stop replaying decoded data
@@ -72,5 +74,29 @@ float ogg_getLength();
  * Starts decoding (thread) of current file
 **/
 void ogg_startDecoding();
+
+
+/**
+ * Audio device information structure
+ */
+class AudioDevice
+{
+public:
+  int index;
+  QString name;
+  QString api;
+  bool isInput;
+  bool isOutput;
+};
+
+/**
+ * Get List of available devices. Returns valid results after audio_initialize() has been called.
+ */
+QList<AudioDevice> devices();
+
+/**
+ * Find out index of the default output device
+ */
+int defaultDeviceIndex();
 
 #endif

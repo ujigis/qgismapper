@@ -88,18 +88,10 @@ static int paCallback(
 }
 
 
-bool audio_start()
+bool audio_start(int outputDevice /* = -1 */)
 {
 	PaStreamParameters outStreamSpec;
-	outStreamSpec.device=Pa_GetDefaultOutputDevice();
-
-	int i;
-	for (i=0; i<Pa_GetDeviceCount(); i++) {
-		if ((Pa_GetDeviceInfo(i)->hostApi==paALSA) || (Pa_GetDeviceInfo(i)->hostApi==paDirectSound)) {
-			outStreamSpec.device=Pa_GetHostApiInfo(Pa_GetDeviceInfo(i)->hostApi)->defaultOutputDevice;
-			break;
-		}
-	}
+  outStreamSpec.device = (outputDevice >= 0 ? outputDevice : Pa_GetDefaultOutputDevice());
 	
 	outStreamSpec.channelCount=2;
 	outStreamSpec.sampleFormat=paInt16;
@@ -277,3 +269,36 @@ void ogg_startDecoding()
 	pthread_create(&decodingThread, NULL, decodingThreadFct, 0);
 	hasDecodingThread=true;
 }
+
+////////////////////////////////////////////////////////////
+//////////// AUDIO BACKEND INFO
+////////////////////////////////////////////////////////////
+
+
+QList<AudioDevice> devices()
+{
+  QList<AudioDevice> lst;
+  int numDevices = Pa_GetDeviceCount();
+  if( numDevices < 0 )
+    return lst;
+
+  for( int i = 0; i<numDevices; i++ )
+  {
+    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo( i );
+    AudioDevice d;
+    d.index = i;
+    d.name = QString::fromLatin1(deviceInfo->name);
+    d.api = QString::fromLatin1(Pa_GetHostApiInfo(deviceInfo->hostApi)->name);
+    d.isInput = (deviceInfo->maxInputChannels > 0);
+    d.isOutput = (deviceInfo->maxOutputChannels > 0);
+    lst.append(d);
+  }
+
+  return lst;
+}
+
+int defaultDeviceIndex()
+{
+  return Pa_GetDefaultOutputDevice();
+}
+
