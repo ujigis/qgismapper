@@ -41,11 +41,30 @@ class PluginAudio(QWidget, Ui_PluginAudio):
 		QObject.connect(
 			self.audioQuitter, SIGNAL("oggEnded()"), self.onOggEnded
 		)
+
+		AudioPlayer.audio_initialize(self.audioQuitter)
+		
+		# populate the output devices combo
+		settings = QSettings()
+		settings.beginGroup("/plugins/PlayerPlugin/Audio")
+		defaultDeviceIndex = settings.value("outputDevice", AudioPlayer.defaultDeviceIndex()).toInt()[0]
+		for device in AudioPlayer.devices():
+			if device.isOutput:
+				self.cboOutputDevice.addItem( "[%s] %s" % (device.api, device.name), QVariant(device.index))
+			if device.index == defaultDeviceIndex:
+				self.cboOutputDevice.setCurrentIndex( self.cboOutputDevice.count()-1 ) # use last added device
+
+	def unload(self):
+		AudioPlayer.audio_terminate()
+
+		settings = QSettings()
+		settings.beginGroup("/plugins/PlayerPlugin/Audio")
+		if self.cboOutputDevice.currentIndex() >= 0:
+			device = self.cboOutputDevice.itemData(self.cboOutputDevice.currentIndex()).toInt()[0]
+			settings.setValue("outputDevice", device)
 		
 	def loadRecording(self, dataDirectory):
 		self.active_checkBox.setChecked(False)
-		
-		AudioPlayer.audio_initialize(self.audioQuitter)
 		
 		#create list of available ogg files in current recording
 		self.dataDirectory=dataDirectory+self.name+"/"
@@ -72,7 +91,6 @@ class PluginAudio(QWidget, Ui_PluginAudio):
 	def unloadRecording(self):
 		self.setEnabled(False)
 		self.stopReplay()
-		AudioPlayer.audio_terminate()
 		
 	def startReplay(self, fromTime):
 		if not self.active_checkBox.isChecked():
@@ -81,7 +99,8 @@ class PluginAudio(QWidget, Ui_PluginAudio):
 		
 		self.stopReplay()
 		self.seekReplayToTime(fromTime)
-		if not AudioPlayer.audio_start():
+		device = self.cboOutputDevice.itemData(self.cboOutputDevice.currentIndex()).toInt()[0]
+		if not AudioPlayer.audio_start(device):
 				self.active_checkBox.setChecked(False)
 				QMessageBox.critical(None, self.tr("Error"), self.tr("Couldn't start audio replay..."))
 		else:
