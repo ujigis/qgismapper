@@ -116,7 +116,8 @@ class GatherPlugin(QObject):
 
 		# GUI
 		self.interface_simple = settings.value("interface/simple", QVariant(False)).toBool()
-		self.output_directory = settings.value("output/directory", QVariant(os.path.expanduser("~/qgismapper/data/"))).toString()
+		# output directory must be a python string
+		self.output_directory = str( settings.value("output/directory", QVariant(os.path.expanduser("~/qgismapper/data/"))).toString() )
 		self.output_append = settings.value("output/append", QVariant(0)).toInt()[0]
 		self.preview_followPosition = settings.value("preview/followPosition", QVariant(True)).toBool()
 		self.preview_scale = settings.value("preview/scale", QVariant(25)).toInt()[0]
