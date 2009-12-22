@@ -205,6 +205,19 @@ float ogg_getLength()
 	return rv;
 }
 
+static inline int16_t float2int16(float x)
+{
+  float v = x * 32768.f;
+  if ( v < -32768.f )
+    return -32768;
+  else if ( v > +32767.f )
+    return +32767;
+  else
+    return (int16_t) v;
+}
+
+
+
 static void *decodingThreadFct(void *data)
 {
 	float **oggPcmChannels;
@@ -226,12 +239,12 @@ static void *decodingThreadFct(void *data)
 
 			if (oggChannels==1) {
 				for(l=0; l<oggDecodedCount; l++) {
-					buffer[l]=(int16_t)(oggPcmChannels[0][l]*32678.f);
+          buffer[l] = float2int16(oggPcmChannels[0][l]);
 				}
 			} else {
 				for(l=0; l<oggDecodedCount; l++) {
-					buffer[l*2+0]=(int16_t)(oggPcmChannels[0][l]*32678.f);
-					buffer[l*2+1]=(int16_t)(oggPcmChannels[1][l]*32678.f);
+          buffer[l*2+0] = float2int16(oggPcmChannels[0][l]);
+          buffer[l*2+1] = float2int16(oggPcmChannels[1][l]);
 				}
 			}
 
