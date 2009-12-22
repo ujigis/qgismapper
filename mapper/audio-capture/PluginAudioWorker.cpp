@@ -10,6 +10,9 @@
 #include "PluginAudioWorker.h"
 #include "PluginAudioWorker_SamplesBuffer.c"
 
+#ifdef _WIN32
+#include "Windows.h"
+#endif
 
 enum {
 	RecordingNoOfChannels=2,
@@ -272,8 +275,9 @@ static void *recordingThreadFct(void *data)
 			//not much in the buffer, wait for a while to get new data
 			sb_unlock(recBuffer);
 #ifndef _WIN32
-			// windows doesn't have microseconds sleep function?
-			usleep(400);
+			usleep(100*1000);
+#else
+			Sleep(100);
 #endif
 		}
 		

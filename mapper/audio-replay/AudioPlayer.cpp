@@ -8,6 +8,7 @@
 #include <vorbis/vorbisfile.h>
 
 #ifdef _WIN32
+#include "Windows.h"
 typedef __int16 int16_t;
 #endif
 
@@ -15,7 +16,7 @@ typedef __int16 int16_t;
 #include "AudioPlayer.h"
 
 enum {
-	SamplesBufferMaxDuration=500,
+	SamplesBufferMaxDuration=500, // in miliseconds
 	OggSamplesPerRead=1024,
 };
 
@@ -239,20 +240,21 @@ static void *decodingThreadFct(void *data)
 
 			if (oggChannels==1) {
 				for(l=0; l<oggDecodedCount; l++) {
-          buffer[l] = float2int16(oggPcmChannels[0][l]);
+					buffer[l] = float2int16(oggPcmChannels[0][l]);
 				}
 			} else {
 				for(l=0; l<oggDecodedCount; l++) {
-          buffer[l*2+0] = float2int16(oggPcmChannels[0][l]);
-          buffer[l*2+1] = float2int16(oggPcmChannels[1][l]);
+					buffer[l*2+0] = float2int16(oggPcmChannels[0][l]);
+					buffer[l*2+1] = float2int16(oggPcmChannels[1][l]);
 				}
 			}
 
 			sb_appendData(samplesBuffer, (const int16_t*)buffer, oggDecodedCount*oggChannels);
 		} else {
 #ifndef _WIN32
-			// sleeping in microseconds not available on win?
-			usleep(SamplesBufferMaxDuration/4);
+			usleep(1000*SamplesBufferMaxDuration/4);
+#else
+			Sleep(SamplesBufferMaxDuration/4);
 #endif
 		}
 
