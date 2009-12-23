@@ -2,6 +2,10 @@
 #include <stdint.h>
 #include "CompressThread.h"
 
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
+
 CompressThread::CompressThread(GatherThread *gatherThread_, const QString &outputFile_, const QString &codec_, int kbitrate_):
 	PreviewThread(gatherThread_), outputFile(outputFile_), sCodec(codec_), kbitrate(kbitrate_), img_convert_ctx(0)
 {

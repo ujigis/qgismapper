@@ -6,15 +6,18 @@
 #include <stdlib.h>
 #include <sys/timeb.h>
 #include <sys/stat.h>
-#include <asm/errno.h>
+#include <sys/types.h>
 #include <assert.h>
 
-#include <sys/types.h>
+#ifndef _WIN32
+#include <asm/errno.h>
 #include <dirent.h>
-#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/videodev2.h>
 #include <linux/videodev.h>
+#endif
+
+#include <fcntl.h>
 
 #include "PluginVideoWorker.h"
 #include "GatherThread.h"
@@ -26,6 +29,7 @@
 #ifndef OLD_FFMPEG
 extern "C" {
   #include <avdevice.h>
+  #include <avformat.h>
 }
 #endif
 
@@ -318,7 +322,7 @@ QStringList getDevices()
 }
 
 
-
+#ifndef _WIN32
 
 int fi2fps(v4l2_fract f) {
 	return int(float(f.denominator)/float(f.numerator));
@@ -502,7 +506,14 @@ CameraCapabilities getDeviceCapabilities(const QString& device)
 
 	return cp;
 }
+#else
+CameraCapabilities getDeviceCapabilities(const QString& device)
+{
+	// TODO
+	return CameraCapabilities();
+}
 
+#endif
 
 
 #ifdef MAKETEST
