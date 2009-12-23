@@ -1,7 +1,8 @@
 #ifndef _PLUGININTERNALS_H_
 #define _PLUGININTERNALS_H_
 
-#include <sys/time.h>
+#include "timeval.h"
+
 #include "PluginVideoWorker.h"
 
 /**
