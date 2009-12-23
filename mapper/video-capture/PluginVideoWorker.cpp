@@ -294,6 +294,7 @@ void setPreviewForDevice(const RecordingParameters &source, VideoPreview *widget
 }
 
 
+#ifndef _WIN32
 
 bool isDevicePresent(const QString& device)
 {
@@ -322,7 +323,6 @@ QStringList getDevices()
 }
 
 
-#ifndef _WIN32
 
 int fi2fps(v4l2_fract f) {
 	return int(float(f.denominator)/float(f.numerator));
@@ -510,8 +510,27 @@ CameraCapabilities getDeviceCapabilities(const QString& device)
 CameraCapabilities getDeviceCapabilities(const QString& device)
 {
 	// TODO
-	return CameraCapabilities();
+	CameraCapabilities cp;
+	cp.modes.append(CameraMode(160,120, 24));
+	cp.modes.append(CameraMode(320,240, 24));
+	cp.modes.append(CameraMode(640,480, 24));
+	return cp;
 }
+
+bool isDevicePresent(const QString& device)
+{
+	// TODO
+	return true;
+}
+
+QStringList getDevices()
+{
+	// TODO
+	QStringList lst;
+	lst.append("0");
+	return lst;
+}
+
 
 #endif
 
