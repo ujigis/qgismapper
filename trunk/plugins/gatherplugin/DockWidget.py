@@ -4,7 +4,7 @@ from PyQt4.QtGui import *
 from DockWidget_ui import Ui_GatherDockWidget
 from DlgSettings import DlgSettings
 import os,statvfs
-
+import sys
 
 WARNING_DISK_SPACE_MiB=256
 MINIMAL_DISK_SPACE_MiB=50
@@ -92,9 +92,17 @@ class DockWidget(QDockWidget, Ui_GatherDockWidget,  object):
 	
 	def timerEvent(self, event):
 		spaceStr=""
+		
 		try:
-			stats=os.statvfs(self.controller.output_directory)
-			space=stats[statvfs.F_BSIZE]*stats[statvfs.F_BAVAIL]/1024/1024
+			if sys.platform == 'win32':
+				import ctypes
+				free_bytes = ctypes.c_ulonglong(0)
+				drive = unicode(self.controller.output_directory[0:3])
+				ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(drive), None, None, ctypes.pointer(free_bytes))
+				space = free_bytes.value / 1024 / 1024
+			else:
+				stats=os.statvfs(self.controller.output_directory)
+				space=stats[statvfs.F_BSIZE]*stats[statvfs.F_BAVAIL]/1024/1024
 			if space>2048:
 				spaceStr="%.2f GiB" % (space/1024.0)
 			else:
