@@ -108,6 +108,7 @@ void GatherThread::doRun()
 	restartCounters();
 
 	if (!openVideo()) {
+		printf("Couldn't open video device\n");
 		closeVideo();
 		setWhatIsOpened(EXIT);
 		return;
@@ -199,11 +200,18 @@ bool GatherThread::openVideo()
 	formatParams.pix_fmt=PIX_FMT_NONE;
 	formatParams.prealloced_context=0;
 	
+#ifndef _WIN32
 	if (!recordingParameters.v4l2)
 		iformat = av_find_input_format("video4linux");
 	else
 		iformat = av_find_input_format("video4linux2");
-	
+#else
+	iformat = av_find_input_format("vfwcap");
+#endif
+
+	if (!iformat)
+		printf("Couldn't find input format\n");
+
 	int err=av_open_input_file(&pFormatCtx, recordingParameters.device.toLocal8Bit().data(), iformat, 0, &formatParams);
 	if (err<0) {
 		return false;
