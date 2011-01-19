@@ -28,6 +28,7 @@ class GatherPlugin(QObject):
 	def __init__(self, iface):
 		QObject.__init__(self)
 		self.iface = iface
+		
 	
 	def initGui(self):
 		""" Initialize plugin's UI """
