@@ -2,7 +2,6 @@
 from PyQt4.QtCore import * 
 from PyQt4.QtGui import *
 from PyQt4.QtXml import *
-from PyQt4.QtTest import *
 import SourcePlugins
 import serial
 import time,  datetime
